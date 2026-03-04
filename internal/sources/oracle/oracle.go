@@ -269,7 +269,16 @@ func buildGoOraConnString(user, password, connectStringBase, walletLocation stri
 	q := url.Values{}
 	q.Set("ssl", "true")
 	q.Set("wallet", trimmedWalletLocation)
-	return fmt.Sprintf("%s?%s", base, q.Encode())
+
+	separator := "?"
+	if strings.Contains(connectStringBase, "?") {
+		separator = "&"
+		if strings.HasSuffix(base, "?") || strings.HasSuffix(base, "&") {
+			separator = ""
+		}
+	}
+
+	return fmt.Sprintf("%s%s%s", base, separator, q.Encode())
 }
 
 func decodePercentEncodedUserInfo(value string) string {
