@@ -166,13 +166,13 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 			return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 		}
 
-		if logger, err := util.LoggerFromContext(req.Context()); err == nil {
-			if s.IncludeResponseBodyInErrors {
-				logger.DebugContext(req.Context(), "http source upstream error", "status", resp.StatusCode, "body", truncateForLog(body, maxErrorBodyLogBytes))
-			} else {
-				logger.DebugContext(req.Context(), "http source upstream error", "status", resp.StatusCode)
-			}
-		}
+if logger, err := util.LoggerFromContext(req.Context()); err == nil {
+	args := []any{"status", resp.StatusCode}
+	if !s.IncludeResponseBodyInErrors {
+		args = append(args, "body", truncateForLog(body, maxErrorBodyLogBytes))
+	}
+	logger.DebugContext(req.Context(), "http source upstream error", args...)
+}
 
 		statusText := http.StatusText(resp.StatusCode)
 		if statusText != "" {
