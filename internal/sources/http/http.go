@@ -30,6 +30,7 @@ import (
 )
 
 const SourceType string = "http"
+const maxErrorBodyLogBytes = 1024
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -49,13 +50,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                   string            `yaml:"name" validate:"required"`
-	Type                   string            `yaml:"type" validate:"required"`
-	BaseURL                string            `yaml:"baseUrl"`
-	Timeout                string            `yaml:"timeout"`
-	DefaultHeaders         map[string]string `yaml:"headers"`
-	QueryParams            map[string]string `yaml:"queryParams"`
-	DisableSslVerification bool              `yaml:"disableSslVerification"`
+	Name                        string            `yaml:"name" validate:"required"`
+	Type                        string            `yaml:"type" validate:"required"`
+	BaseURL                     string            `yaml:"baseUrl"`
+	Timeout                     string            `yaml:"timeout"`
+	DefaultHeaders              map[string]string `yaml:"headers"`
+	QueryParams                 map[string]string `yaml:"queryParams"`
+	IncludeResponseBodyInErrors bool              `yaml:"includeResponseBodyInErrors"`
+	DisableSslVerification      bool              `yaml:"disableSslVerification"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -160,7 +162,23 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+		if s.IncludeResponseBodyInErrors {
+			return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+		}
+
+		if logger, err := util.LoggerFromContext(req.Context()); err == nil {
+			if s.IncludeResponseBodyInErrors {
+				logger.DebugContext(req.Context(), "http source upstream error", "status", resp.StatusCode, "body", truncateForLog(body, maxErrorBodyLogBytes))
+			} else {
+				logger.DebugContext(req.Context(), "http source upstream error", "status", resp.StatusCode)
+			}
+		}
+
+		statusText := http.StatusText(resp.StatusCode)
+		if statusText != "" {
+			return nil, fmt.Errorf("unexpected status code: %d (%s)", resp.StatusCode, statusText)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	var data any
@@ -169,4 +187,14 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 		return string(body), nil
 	}
 	return data, nil
+}
+
+func truncateForLog(body []byte, limit int) string {
+	if limit <= 0 || len(body) == 0 {
+		return ""
+	}
+	if len(body) <= limit {
+		return string(body)
+	}
+	return fmt.Sprintf("%s...(%d bytes truncated)", string(body[:limit]), len(body)-limit)
 }

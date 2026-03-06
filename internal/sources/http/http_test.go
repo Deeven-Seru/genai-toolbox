@@ -63,17 +63,19 @@ func TestParseFromYamlHttp(t *testing.T) {
 			queryParams:
 				api-key: test_api_key
 				param: param-value
+			includeResponseBodyInErrors: true
 			disableSslVerification: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
-					Name:                   "my-http-instance",
-					Type:                   http.SourceType,
-					BaseURL:                "http://test_server/",
-					Timeout:                "10s",
-					DefaultHeaders:         map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
-					QueryParams:            map[string]string{"api-key": "test_api_key", "param": "param-value"},
-					DisableSslVerification: true,
+					Name:                        "my-http-instance",
+					Type:                        http.SourceType,
+					BaseURL:                     "http://test_server/",
+					Timeout:                     "10s",
+					DefaultHeaders:              map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
+					QueryParams:                 map[string]string{"api-key": "test_api_key", "param": "param-value"},
+					IncludeResponseBodyInErrors: true,
+					DisableSslVerification:      true,
 				},
 			},
 		},
