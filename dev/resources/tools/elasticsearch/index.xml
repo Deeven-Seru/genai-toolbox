@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Elasticsearch on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/elasticsearch/</link><description>Recent content in Elasticsearch on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/elasticsearch/index.xml" rel="self" type="application/rss+xml"/><item><title>elasticsearch-esql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Elasticsearch on MCP Toolbox for Databases</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/elasticsearch/</link><description>Recent content in Elasticsearch on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/elasticsearch/index.xml" rel="self" type="application/rss+xml"/><item><title>elasticsearch-esql</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
 &lt;p>Execute ES|QL queries.&lt;/p>
 &lt;p>This tool allows you to execute ES|QL queries against your Elasticsearch
 cluster. You can use this to perform complex searches and aggregations.&lt;/p>
@@ -51,9 +51,9 @@ for more information.&lt;/p>
  &lt;/tr>
  &lt;tr>
  &lt;td>parameters&lt;/td>
- &lt;td style="text-align: center">&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/#specifying-parameters">parameters&lt;/a>&lt;/td>
+ &lt;td style="text-align: center">&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/#specifying-parameters">parameters&lt;/a>&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
- &lt;td>List of &lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/#specifying-parameters">parameters&lt;/a> that will be used with the ES|QL query.&lt;br/>Only supports “string”, “integer”, “float”, “boolean”.&lt;/td>
+ &lt;td>List of &lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/#specifying-parameters">parameters&lt;/a> that will be used with the ES|QL query.&lt;br/>Only supports “string”, “integer”, “float”, “boolean”.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item></channel></rss>

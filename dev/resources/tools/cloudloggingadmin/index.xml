@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cloud Logging Admin on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/</link><description>Recent content in Cloud Logging Admin on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/index.xml" rel="self" type="application/rss+xml"/><item><title>cloud-logging-admin-list-log-names</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/</guid><description>&lt;h2 id="about">About&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cloud Logging Admin on MCP Toolbox for Databases</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/</link><description>Recent content in Cloud Logging Admin on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/index.xml" rel="self" type="application/rss+xml"/><item><title>cloud-logging-admin-list-log-names</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>cloud-logging-admin-list-log-names&lt;/code> tool lists the log names available in the Google Cloud project.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">tools&lt;/span>&lt;span class="w">
@@ -59,11 +59,11 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;td style="text-align: left">Maximum number of log entries to return (default: 200).&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>cloud-logging-admin-list-resource-types</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>cloud-logging-admin-list-resource-types</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>cloud-logging-admin-list-resource-types&lt;/code> tool lists the monitored resource types available in Google Cloud Logging.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">tools&lt;/span>&lt;span class="w">
@@ -101,11 +101,11 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>cloud-logging-admin-query-logs</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>cloud-logging-admin-query-logs</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>cloud-logging-admin-query-logs&lt;/code> tool allows you to query log entries from Google Cloud Logging using the advanced logs filter syntax.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-logging-admin/">cloud-logging-admin&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">tools&lt;/span>&lt;span class="w">

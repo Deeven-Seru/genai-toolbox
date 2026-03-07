@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>SQL Server on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/</link><description>Recent content in SQL Server on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/index.xml" rel="self" type="application/rss+xml"/><item><title>mssql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>SQL Server on MCP Toolbox for Databases</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/</link><description>Recent content in SQL Server on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/index.xml" rel="self" type="application/rss+xml"/><item><title>mssql-execute-sql</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mssql-execute-sql&lt;/code> tool executes a SQL statement against a SQL Server
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mssql-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -46,13 +46,13 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>mssql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>mssql-list-tables</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified
 tables in a SQL server database. It is compatible with any of the following
 sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mssql-list-tables&lt;/code> lists detailed schema information (object type, columns,
 constraints, indexes, triggers, owner, comment) as JSON for user-created tables
@@ -101,12 +101,12 @@ full table information. Default: &lt;code>detailed&lt;/code>.&lt;/li>
  &lt;td>Description of the tool that is passed to the agent.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>mssql-sql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>mssql-sql</title><link>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Deeven-Seru.github.io/genai-toolbox/dev/resources/tools/mssql/mssql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mssql-sql&lt;/code> tool executes a pre-defined SQL statement against a SQL Server
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://Deeven-Seru.github.io/genai-toolbox/dev/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>Toolbox supports the &lt;a href="https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16">prepare statement syntax&lt;/a> of MS SQL
 Server and expects parameters in the SQL query to be in the form of either
