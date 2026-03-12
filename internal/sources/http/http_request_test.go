@@ -58,7 +58,7 @@ func TestRunRequestIncludesErrorBodyWhenEnabled(t *testing.T) {
 	defer server.Close()
 
 	source := &Source{
-		Config: Config{IncludeResponseBodyInErrors: true},
+		Config: Config{ReturnFullError: true},
 		client: server.Client(),
 	}
 

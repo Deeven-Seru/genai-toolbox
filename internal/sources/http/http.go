@@ -56,6 +56,7 @@ type Config struct {
 	Timeout                     string            `yaml:"timeout"`
 	DefaultHeaders              map[string]string `yaml:"headers"`
 	QueryParams                 map[string]string `yaml:"queryParams"`
+	ReturnFullError             bool              `yaml:"returnFullError"`
 	IncludeResponseBodyInErrors bool              `yaml:"includeResponseBodyInErrors"`
 	DisableSslVerification      bool              `yaml:"disableSslVerification"`
 }
@@ -162,17 +163,18 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		if s.IncludeResponseBodyInErrors {
+		returnFullError := s.ReturnFullError || s.IncludeResponseBodyInErrors
+		if returnFullError {
 			return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 		}
 
-if logger, err := util.LoggerFromContext(req.Context()); err == nil {
-	args := []any{"status", resp.StatusCode}
-	if !s.IncludeResponseBodyInErrors {
-		args = append(args, "body", truncateForLog(body, maxErrorBodyLogBytes))
-	}
-	logger.DebugContext(req.Context(), "http source upstream error", args...)
-}
+		if logger, err := util.LoggerFromContext(req.Context()); err == nil {
+			args := []any{"status", resp.StatusCode}
+			if !returnFullError {
+				args = append(args, "body", truncateForLog(body, maxErrorBodyLogBytes))
+			}
+			logger.DebugContext(req.Context(), "http source upstream error", args...)
+		}
 
 		statusText := http.StatusText(resp.StatusCode)
 		if statusText != "" {
