@@ -1,6 +1,6 @@
 // Copyright © 2025, Oracle and/or its affiliates.
 
-package oracle_test
+package oracle
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
@@ -33,9 +32,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-cs": oracle.Config{
+				"my-oracle-cs": Config{
 					Name:             "my-oracle-cs",
-					Type:             oracle.SourceType,
+					Type:             SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
 					User:             "my_user",
 					Password:         "my_pass",
@@ -56,9 +55,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-host": oracle.Config{
+				"my-oracle-host": Config{
 					Name:        "my-oracle-host",
-					Type:        oracle.SourceType,
+					Type:        SourceType,
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
@@ -81,9 +80,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true 
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-tns-oci": oracle.Config{
+				"my-oracle-tns-oci": Config{
 					Name:     "my-oracle-tns-oci",
-					Type:     oracle.SourceType,
+					Type:     SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",
@@ -205,10 +204,10 @@ func TestRunSQLExecutesDML(t *testing.T) {
 	}
 	defer db.Close()
 
-	src := &oracle.Source{
-		Config: oracle.Config{
+	src := &Source{
+		Config: Config{
 			Name: "test-dml-source",
-			Type: oracle.SourceType,
+			Type: SourceType,
 			User: "test-user",
 		},
 		DB: db,
@@ -223,5 +222,92 @@ func TestRunSQLExecutesDML(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error from fake DB execution, but got nil; " +
 			"DML path may not have been executed")
+	}
+}
+
+func TestBuildGoOraConnString(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name           string
+		user           string
+		password       string
+		connBase       string
+		walletLocation string
+		want           string
+	}{
+		{
+			name:           "encodes credentials and wallet",
+			user:           "user[client]",
+			password:       "pa:ss@word",
+			connBase:       "dbhost:1521/XEPDB1",
+			walletLocation: "/tmp/my wallet",
+			want:           "oracle://user%5Bclient%5D:pa%3Ass%40word@dbhost:1521/XEPDB1?ssl=true&wallet=%2Ftmp%2Fmy+wallet",
+		},
+		{
+			name:           "no wallet",
+			user:           "scott",
+			password:       "tiger",
+			connBase:       "dbhost:1521/ORCL",
+			walletLocation: "",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL",
+		},
+		{
+			name:           "does not double encode percent encoded user",
+			user:           "app_user%5BCLIENT_A%5D",
+			password:       "secret",
+			connBase:       "dbhost:1521/ORCL",
+			walletLocation: "",
+			want:           "oracle://app_user%5BCLIENT_A%5D:secret@dbhost:1521/ORCL",
+		},
+		{
+			name:           "uses trimmed wallet location",
+			user:           "scott",
+			password:       "tiger",
+			connBase:       "dbhost:1521/ORCL",
+			walletLocation: "  /tmp/wallet  ",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+		{
+			name:           "preserves existing query without wallet",
+			user:           "scott",
+			password:       "tiger",
+			connBase:       "dbhost:1521/ORCL?transport_connect_timeout=30",
+			walletLocation: "",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?transport_connect_timeout=30",
+		},
+		{
+			name:           "merges existing query with wallet",
+			user:           "scott",
+			password:       "tiger",
+			connBase:       "dbhost:1521/ORCL?foo=bar",
+			walletLocation: "/tmp/wallet",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?foo=bar&ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+		{
+			name:           "preserves malformed existing query when appending wallet",
+			user:           "scott",
+			password:       "tiger",
+			connBase:       "dbhost:1521/ORCL?already=%ZZ",
+			walletLocation: "/tmp/wallet",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?already=%ZZ&ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			config := Config{
+				User:             tc.user,
+				Password:         tc.password,
+				ConnectionString: tc.connBase,
+				WalletLocation:   tc.walletLocation,
+			}
+			got, _ := buildGoOraConnString(config)
+			if got != tc.want {
+				t.Fatalf("buildGoOraConnString() = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

@@ -254,10 +254,25 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 	return out, nil
 }
 
-func buildGoOraConnString(user, password, connectStringBase, walletLocation string) string {
+func buildConnectStringBase(config Config) string {
+	if config.TnsAlias != "" {
+		return strings.TrimSpace(config.TnsAlias)
+	}
+	if config.ConnectionString != "" {
+		return strings.TrimSpace(config.ConnectionString)
+	}
+	if config.Port > 0 {
+		return fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
+	}
+	return fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
+}
+
+func buildGoOraConnString(config Config) (string, string) {
+	connectStringBase := buildConnectStringBase(config)
+	// Decode any pre-encoded credentials to avoid double-encoding, then encode safely for URL userinfo.
 	userInfo := url.UserPassword(
-		decodePercentEncodedUserInfo(user),
-		decodePercentEncodedUserInfo(password),
+		decodePercentEncodedUserInfo(config.User),
+		decodePercentEncodedUserInfo(config.Password),
 	).String()
 
 	baseConnStr, existingQuery, hasQuery := strings.Cut(connectStringBase, "?")
@@ -273,16 +288,16 @@ func buildGoOraConnString(user, password, connectStringBase, walletLocation stri
 		}
 	}
 
-	trimmedWalletLocation := strings.TrimSpace(walletLocation)
+	trimmedWalletLocation := strings.TrimSpace(config.WalletLocation)
 	if rawExistingQuery != "" {
 		if trimmedWalletLocation == "" {
-			return fmt.Sprintf("%s?%s", dsnBase, rawExistingQuery)
+			return fmt.Sprintf("%s?%s", dsnBase, rawExistingQuery), connectStringBase
 		}
 
 		walletQuery := url.Values{}
 		walletQuery.Set("ssl", "true")
 		walletQuery.Set("wallet", trimmedWalletLocation)
-		return fmt.Sprintf("%s?%s&%s", dsnBase, rawExistingQuery, walletQuery.Encode())
+		return fmt.Sprintf("%s?%s&%s", dsnBase, rawExistingQuery, walletQuery.Encode()), connectStringBase
 	}
 
 	if trimmedWalletLocation != "" {
@@ -291,10 +306,10 @@ func buildGoOraConnString(user, password, connectStringBase, walletLocation stri
 	}
 
 	if len(q) == 0 {
-		return dsnBase
+		return dsnBase, connectStringBase
 	}
 
-	return fmt.Sprintf("%s?%s", dsnBase, q.Encode())
+	return fmt.Sprintf("%s?%s", dsnBase, q.Encode()), connectStringBase
 }
 
 func decodePercentEncodedUserInfo(value string) string {
@@ -331,25 +346,14 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		}()
 	}
 
-	var connectStringBase string
-	if config.TnsAlias != "" {
-		connectStringBase = strings.TrimSpace(config.TnsAlias)
-	} else if config.ConnectionString != "" {
-		connectStringBase = strings.TrimSpace(config.ConnectionString)
-	} else {
-		if config.Port > 0 {
-			connectStringBase = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
-		} else {
-			connectStringBase = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
-		}
-	}
-
 	var driverName string
 	var finalConnStr string
+	var connectStringBase string
 
 	if config.UseOCI {
 		// Use godror driver (requires OCI)
 		driverName = "godror"
+		connectStringBase = buildConnectStringBase(config)
 		finalConnStr = fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
 			config.User, config.Password, connectStringBase)
 		logger.DebugContext(ctx, fmt.Sprintf("Using godror driver (OCI-based) with connectString: %s\n", connectStringBase))
@@ -357,7 +361,7 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		// Use go-ora driver (pure Go)
 		driverName = "oracle"
 
-		finalConnStr = buildGoOraConnString(config.User, config.Password, connectStringBase, config.WalletLocation)
+		finalConnStr, connectStringBase = buildGoOraConnString(config)
 
 		if hasWallet {
 			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with wallet and serverString: %s\n", connectStringBase))
