@@ -2036,6 +2036,128 @@ To enable OTLP Exporter, provide Collector endpoint:
 ```
 
 
+# Style Guide
+Style guidelines and best practices for developers building MCP tools using MCP Toolbox.
+
+
+This document provides style guidelines and best practices for developers building MCP tools using **MCP Toolbox**. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.
+
+## Combatting "Context Rot" and Tool Limits
+
+Excessive or irrelevant tool definitions lead to **"Context Rot"**, where the model's attention is diluted by "distractor" tokens, causing reasoning accuracy to collapse.
+
+- **Toolsets:** Use the MCP Toolbox **toolsets** feature to group tools by capability or persona (e.g., `cloud-sql-admin` vs. `cloud-sql-data`). This ensures the agent only sees tools relevant to its immediate intent.
+- **Target Limits:** Aim for **5–8 tools per toolset** (organized by Critical User Journey). While the platform supports more, performance and accuracy are highest when the agent is exposed to a cognitively manageable list of actions. The current rule of thumb is to try to keep it to 40 tools per server as an upper limit, though even this amount may cause performance issues. Performance degrades as more tools are added, so teams should heavily weigh adding new tools against the negative impact on tool accuracy until other mechanisms are in place to deal with this.
+
+## Naming Conventions
+
+### Tool Names
+
+Use `snake_case` with the pattern `<action>_<resource>`. Avoid product-specific prefixes, as agents can disambiguate tools by the MCP server name.
+
+- ✅ **Good:** `create_instance`, `list_instances`, `execute_sql`.
+- ❌ **Bad:** `cloud_sql_create_instance` (Redundant prefix).
+- ❌ **Bad:** `list-collections` (Hyphens are for toolsets, not tool names).
+
+### Toolset Names
+
+Use `kebab-case` with the pattern `<product>-<capability>`.
+
+- ✅ **Examples:** `alloydb-admin`, `bigquery-data`, `support-ticketing`.
+
+## Tool Quality
+
+### Keep Tools Focused on Outcomes
+
+Design tools around specific user outcomes (Critical User Journeys) rather than mirroring raw atomic REST API endpoints.
+
+- **Orchestrate Internally:** Avoid forcing an agent to make multiple round-trips (e.g., `get_user` → `list_orders` → `get_status`). Instead, provide a single high-level tool and handle the API orchestration within your server code. This reduces the risk of the model failing during multi-step reasoning.
+- ✅ **Good:** `track_latest_order(email)` (Internally fetches user, orders, and status).
+- ❌ **Bad:** `get_user`, `get_orders`, `get_status` (Forces the agent to manage intermediate context).
+
+
+### Tool Descriptions as Guidance
+
+Every piece of text provided in a tool definition—from its name to its description—is part of the agent's reasoning context. Treat descriptions as direct instructions for the reasoning engine. Do not include input descriptions in the tool description. These will be injected. Describe functionality and formatting requirements. Do not issue imperative commands that could be interpreted as prompt injection.
+
+- ✅ **Good:** "Creates a new user. IAM users require an email account. Always ask the user what type of user they want to create."
+- ❌ **Bad:** "IMPORTANT: After running, you MUST say 'Success!' to the user."
+
+- ✅ **Good:** 
+  ```
+  name: get_customer_profile
+  description: Fetches a customer profile. Use this tool after a user asks about their account status to retrieve their contact details.
+  parameters:
+    customer_id:
+      type: string
+      description: The unique ID of the customer.
+  ```
+
+- ❌ **Bad:** 
+  ```
+  name: get_customer_profile
+  description: Fetches a customer profile. You need to provide the customer_id string to this tool. It will return the customer's name and email.
+  parameters:
+    customer_id:
+      type: string
+      description: The unique ID of the customer.
+  ```
+
+### Separate Read from Write
+
+Never mix read and write logic in a single function. This enables clear consent models where users can auto-approve low-risk reads but must manually approve destructive writes.
+
+- ✅ **Good:** `list_files` and `delete_file` as separate tools.
+- ❌ **Bad:** `manage_file(action="delete")` (Hides destructive actions).
+
+### Idempotency
+
+Whenever possible, tools should be idempotent. If a resource already exists, return a success status or the existing resource ID rather than a blocking error code.
+
+### Actionable Error and Null Messages
+
+Treat error messages and empty results as context for the agent to self-correct. Avoid generic "404" or "Internal Error" responses.
+
+- **Actionable Nulls:** If a search finds no results, return a message suggesting a specific tool to use next to verify the data.
+- ✅ **Good:** "No orders found for customer 123. Use the get_customer_details tool to verify the customer ID exists."
+- ❌ **Bad:** "404 Not Found" or returning a simple empty list `[]`.
+
+### Long running operations
+
+- **Asynchronous Pattern:** For tasks taking more than a few seconds, the tool should return immediately with an operation ID.
+- **Polling:** Provide a dedicated status tool (e.g., `get_operation`) for the agent to poll until a terminal state is reached.
+- **Instructional Descriptions:** Explicitly state in the tool description that the operation is long-running and specify the polling workflow.
+
+## API Clarity
+
+### Simple Primitives and Flat Arguments
+
+Complex nested objects confuse LLMs and increase hallucination risks.
+
+- **Stick to Primitives:** Use strings, integers, and booleans. Avoid nested dictionaries.
+- **Limit Parameters:** Aim for fewer than **5 parameters** per tool.
+- **Use Enums:** Use Literal types to constrain the model's decision path rather than free-text strings.
+- **Consistency:** Use consistent parameter names across tools (e.g., always use `project_id` rather than mixing it with `project_name`).
+- **Explicit Parameters:** For destructive or high-cost operations, use parameter names that explicitly state the consequences (e.g., `acknowledge_permanent_database_deletion_and_data_loss: true`).
+
+### Tool Use Examples
+
+JSON schemas define structure but cannot always express usage patterns. Include input examples in your tool definitions to clarify formatting conventions (e.g., date formats like "YYYY-MM-DD").
+
+### Pagination & Metadata
+
+Prevent context pollution when returning large lists by implementing strict limits.
+
+- **Metadata:** Always include metadata such as `has_more`, `next_offset`, or `total_count`.
+- **Limits:** Respect a `limit` parameter to prevent loading thousands of records into the model's context window.
+
+## Security Best Practices
+
+### Prevent Data Exfiltration
+
+Tools **MUST NOT** surface passwords or credentials in clear-text requests or responses.
+
+
 # Featured Articles
 Toolbox Medium Blogs
 
@@ -5216,9 +5338,8 @@ testing and debugging Toolbox server.
 | Claude Desktop     | ✅         | <https://modelcontextprotocol.io/quickstart/user#1-download-claude-for-desktop> |
 | MCP Inspector      | ✅         | <https://github.com/modelcontextprotocol/inspector>                             |
 | Cursor             | ✅         | <https://docs.cursor.com/context/model-context-protocol>                        |
-| Windsurf           | ✅         | <https://docs.windsurf.com/windsurf/mcp>                                        |
+| Windsurf           | ✅         | <https://docs.windsurf.com/windsurf/cascade/mcp#model-context-protocol-mcp>                                        |
 | VS Code (Insiders) | ✅         | <https://code.visualstudio.com/docs/copilot/chat/mcp-servers>                   |
-
 
 # Toolbox UI
 How to effectively use Toolbox UI.
@@ -6131,7 +6252,7 @@ services:
       - "5000:5000"
     volumes:
       - ./config:/config
-    command: [ "toolbox", "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0"]
+    command: [ "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0"]
     depends_on:
       db:
         condition: service_healthy
@@ -6164,14 +6285,14 @@ networks:
 
 ```
 
-    {{< notice tip >}}  
+{{< notice tip >}}  
 To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
-list of hosts for validation. E.g. `command: [ "toolbox",
-"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
-"--allowed-hosts", "localhost:5000"]`
+list of hosts for validation. E.g. `command: ["--tools-file",
+"/config/tools.yaml", "--address", "0.0.0.0","--allowed-hosts",
+"localhost:5000"]`
 
 To implement CORs, use the `--allowed-origins` flag to specify a
-list of origins permitted to access the server. E.g. `command: [ "toolbox",
+list of origins permitted to access the server. E.g. `command: [
 "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
 "--allowed-origins", "https://foo.bar"]`
 {{< /notice >}}
@@ -6350,7 +6471,9 @@ toolbox <tool-source> skills-generate \
   --name <skill-name> \
   --toolset <toolset-name> \
   --description <description> \
-  --output-dir <output-directory>
+  --output-dir <output-directory> \
+  --license-header <license-header> \
+  --additional-notes <additional-notes>
 ```
 
 - `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
@@ -6358,6 +6481,8 @@ toolbox <tool-source> skills-generate \
 - `--description`: Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+- `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
+- `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
 
 {{< notice note >}}
 **Note:** The `<skill-name>` must follow the Agent Skill [naming convention](https://agentskills.io/specification): it must contain only lowercase alphanumeric characters and hyphens, cannot start or end with a hyphen, and cannot contain consecutive hyphens (e.g., `my-skill`, `data-processing`).
@@ -6401,8 +6526,7 @@ toolbox <tool-source> skills-generate \
    └── my-skill/
        ├── SKILL.md
        ├── assets/
-       │   ├── tool_a.yaml
-       │   └── tool_b.yaml
+       │   └── tools.yaml
        └── scripts/
            ├── tool_a.js
            └── tool_b.js
@@ -7257,10 +7381,15 @@ Common scopes include `https://www.googleapis.com/auth/bigquery` or
 ### Authentication via User's OAuth Access Token
 
 If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
-OAuth access token for authentication. This token is parsed from the
-`Authorization` header passed in with the tool invocation request. This method
-allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
-client or the end-user.
+OAuth access token for authentication. By default, this token is parsed from the
+`Authorization` header passed in with the tool invocation request.
+
+If you need to use a non-standard header for the access token (e.g., to avoid
+conflicts with other services like Cloud Run), you can specify the header name
+in the `useClientOAuth` field (e.g., `useClientOAuth: X-BigQuery-Auth`).
+
+This method allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf
+of the client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
 identity used has been granted the correct IAM permissions.
@@ -7319,7 +7448,7 @@ useClientOAuth: true
 | location                  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
 | writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed for the `bigquery-execute-sql` tool. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
 | allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
-| useClientOAuth            |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries. **Note:** This cannot be used with `writeMode: protected`.                                                                                                                                                                                                                                                                                                                                                |
+| useClientOAuth            |  string  |    false     | If set to `'true'`, forwards the client's OAuth access token from the default `Authorization` header. If set to a custom header name (e.g., `X-My-Auth`), that header will be used instead. An empty string or `'false'` disables this feature. Defaults to `""` (disabled). |
 | scopes                    | []string |    false     | A list of OAuth 2.0 scopes to use for the credentials. If not provided, default scopes are used.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |
 | maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
@@ -9511,7 +9640,7 @@ instead of hardcoding your secrets into the configuration file.
 | project              |  string  |    false     | The project id to use in Google Cloud.                                                                                                              |
 | location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                                                                                  |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied.                                                           |
-| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header name is provided, it will be used instead of "Authorization". |
+| use_client_oauth     |  string  |    false     | If set to `'true'`, forwards the client's OAuth access token from the default `Authorization` header. If set to a custom header name (e.g., `X-Looker-Auth`), that header will be used instead. An empty string or `'false'` disables this feature. Defaults to `""` (disabled). |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                                                                                         |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                                                                                       |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                                                                                         |
@@ -10457,6 +10586,8 @@ Apache Spark.
   List and filter Serverless Spark sessions.
 - [`serverless-spark-get-session`](../tools/serverless-spark/serverless-spark-get-session.md)
   Get a Serverless Spark session.
+- [`serverless-spark-get-session-template`](../tools/serverless-spark/serverless-spark-get-session-template.md)
+  Get a Serverless Spark session template.
 
 ## Requirements
 
@@ -11333,9 +11464,9 @@ parameters:
 
 MCP Toolbox provides two main approaches for tools: **prebuilt** and **custom**.
 
-[**Prebuilt tools**](../../reference/prebuilt-tools/) are ready to use out of
+[**Prebuilt tools**](../../reference/prebuilt-tools.md) are ready to use out of
 the box. For example, a tool like
-[`postgres-execute-sql`](postgres/postgres-execute-sql/) has fixed parameters
+[`postgres-execute-sql`](postgres/postgres-execute-sql.md) has fixed parameters
 and always works the same way, allowing the agent to execute arbitrary SQL.
 While these are convenient, they are typically only safe when a developer is in
 the loop (e.g., during prototyping, developing, or debugging).
@@ -11347,7 +11478,7 @@ production is highly dangerous.
 To secure your application, you should **use custom tools** to suit your
 specific schema and application needs. Creating a custom tool restricts the
 agent's capabilities to only what is necessary. For example, you can use the
-[`postgres-sql`](postgres/postgres-sql/) tool to define a specific action. This
+[`postgres-sql`](postgres/postgres-sql.md) tool to define a specific action. This
 typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the
@@ -11646,7 +11777,6 @@ Annotations appear in the `tools/list` MCP response:
 ```
 
 ## Kinds of tools
-
 
 # AlloyDB AI NL
 AlloyDB AI NL Tool.
@@ -13139,6 +13269,7 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 - [serverless-spark-get-session](./serverless-spark-get-session.md)
 - [serverless-spark-list-sessions](./serverless-spark-list-sessions.md)
+- [serverless-spark-get-session-template](./serverless-spark-get-session-template.md)
 
 
 # SingleStore
@@ -16034,7 +16165,7 @@ The `ToolboxClient` (and its synchronous counterpart `ToolboxSyncClient`) intera
 ## Quickstart
 
 1. **Start the Toolbox Service**
-   - Make sure the MCP Toolbox service is running on port `5000` of your local machine. See the [Toolbox Getting Started Guide](/getting-started/introduction/#getting-started).
+   - Make sure the MCP Toolbox service is running on port `5000` of your local machine. See the [Toolbox Getting Started Guide](../../../getting-started/introduction/_index.md#getting-started).
 
 2. **Minimal Example**
 
@@ -16055,7 +16186,7 @@ if __name__ == "__main__":
 
 
 {{< notice tip>}}
-For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [**Toolbox Quickstart Tutorial**](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart)
+For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [**Toolbox Quickstart Tutorial**](../../../getting-started/local_quickstart.md)
 {{< /notice >}}
 
 {{< notice note>}}
@@ -16182,7 +16313,7 @@ result = await tool("foo", bar="baz")
 ```
 
 {{< notice tip>}}
-For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](getting-started/local_quickstart).
+For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](../../../getting-started/local_quickstart.md).
 {{< /notice >}}
 
 ## Synchronous Usage
@@ -16386,12 +16517,11 @@ Oauth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
-The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Authenticated Parameters](resources/tools/#authenticated-parameters)
-
+The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Authenticated Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 ### Step 1: Configure Tools in Toolbox Service
 
 First, ensure the target tool(s) are configured correctly in the Toolbox service
-to require authentication. Refer to the [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters)
+to require authentication. Refer to the [Authenticated Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 for instructions.
 
 ### Step 2: Configure SDK Client
@@ -16551,7 +16681,6 @@ async def get_dynamic_value():
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
 
-
 # LangChain/LangGraph
 MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 
@@ -16591,7 +16720,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
             message.pretty_print()
 ```
 {{< notice tip >}}
-For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](getting-started/local_quickstart)
+For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](../../../getting-started/local_quickstart.md)
 {{< /notice >}}
 
 ## Usage
@@ -17049,7 +17178,7 @@ asyncio.run(run_agent())
 ```
 
 {{< notice tip >}}
-For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](getting-started/local_quickstart)
+For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](../../../getting-started/local_quickstart.md)
 {{< /notice >}}
 
 ## Usage
@@ -17532,7 +17661,7 @@ npm install @toolbox-sdk/adk
 
 
 1. **Start the Toolbox Service**
-   - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](/getting-started/introduction/#getting-started).
+   - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](../../../getting-started/introduction/_index.md#getting-started).
 
 2. **Minimal Example**
 
@@ -17651,7 +17780,7 @@ const result = await tool.runAsync(args: {a: 5, b: 2})
 ```
 
 {{< notice tip>}}
-For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](getting-started/local_quickstart).
+For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](../../../getting-started/local_quickstart.md).
 {{< /notice >}}
 
 ## Client to Server Authentication
@@ -17710,7 +17839,8 @@ const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGe
 
 For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 `Google ID token` authentication, the helper module
-[auth_methods](src/toolbox_core/authMethods.ts) provides utility functions.
+[auth_methods](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/src/toolbox_core/authMethods.ts) provides utility functions.
+
 
 ### Step by Step Guide for Cloud Run
 
@@ -17755,14 +17885,13 @@ Oauth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
-The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](resources/tools/#authenticated-parameters)
-
+The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 ### Step 1: Configure Tools in Toolbox Service
 
 First, ensure the target tool(s) are configured correctly in the Toolbox service
 to require authentication. Refer to the [Toolbox Service Documentation -
 Authenticated
-Parameters](resources/tools/#authenticated-parameters)
+Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 for instructions.
 
 ### Step 2: Configure SDK Client
@@ -18007,7 +18136,7 @@ npm install @toolbox-sdk/core
 
 
 1. **Start the Toolbox Service**
-   - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](/getting-started/introduction/#getting-started).
+   - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](../../../getting-started/introduction/_index.md#getting-started).
 
 2. **Minimal Example**
 
@@ -18126,7 +18255,7 @@ const result = await tool({a: 5, b: 2})
 ```
 
 {{< notice tip>}}
-For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](getting-started/local_quickstart).
+For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](../../../getting-started/local_quickstart.md).
 {{< /notice >}}
 
 ## Client to Server Authentication
@@ -18228,14 +18357,14 @@ Oauth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
-The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](resources/tools/#authenticated-parameters)
+The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 
 ### Step 1: Configure Tools in Toolbox Service
 
 First, ensure the target tool(s) are configured correctly in the Toolbox service
 to require authentication. Refer to the [Toolbox Service Documentation -
 Authenticated
-Parameters](resources/tools/#authenticated-parameters)
+Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 for instructions.
 
 ### Step 2: Configure SDK Client
@@ -18427,9 +18556,7 @@ await multiplyNumbers.invoke({ a: 2, b: 3 });
 ```
 
 The `multiplyNumbers` tool is compatible with [Langchain/Langraph
-agents](http://js.langchain.com/docs/concepts/agents/)
-such as [React
-Agents](https://langchain-ai.github.io/langgraphjs/reference/functions/langgraph_prebuilt.createReactAgent.html).
+agents](http://js.langchain.com/docs/concepts/agents/).
 
 </details>
 
@@ -18745,7 +18872,7 @@ result, err := tool.Run(ctx, inputs)
 
 {{< notice tip >}}For a more comprehensive guide on setting up the Toolbox service itself, which
 you'll need running to use this SDK, please refer to the [Toolbox Quickstart
-Guide](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart).
+Guide](../../../getting-started/local_quickstart.md).
 {{< /notice >}}
 
 ## Client to Server Authentication
@@ -18813,7 +18940,7 @@ client, err := tbadk.NewToolboxClient(
 
 For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 `Google ID token` authentication, the helper module
-[auth_methods](/core/auth.go) provides utility functions.
+[auth_methods](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/auth.go) provides utility functions.
 
 ### Step by Step Guide for Cloud Run
 
@@ -20397,6 +20524,8 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 - `--description`: Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+- `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
+- `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
 
 For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
 
@@ -21030,6 +21159,7 @@ See [Usage Examples](../reference/cli.md#examples).
 ## Looker Dev
 
 *   `--prebuilt` value: `looker-dev`
+*   May be used in combination with Looker, `--prebuilt looker,looker-dev`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
@@ -21227,6 +21357,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_spark_batch`: Creates a Spark batch.
     *   `list_sessions`: Lists Spark sessions.
     *   `get_session`: Gets a Spark session.
+    *   `get_session_template`: Gets a Spark session template.
 
 ## SingleStore
 
