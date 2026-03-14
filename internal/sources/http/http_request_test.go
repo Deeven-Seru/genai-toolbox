@@ -15,10 +15,15 @@
 package http
 
 import (
+	"bytes"
+	"context"
 	nethttp "net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
@@ -33,12 +38,18 @@ func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
 		client: server.Client(),
 	}
 
-	req, err := nethttp.NewRequest(nethttp.MethodGet, server.URL, nil)
+	logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx := util.WithLogger(context.Background(), logger)
+
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("failed to build request: %v", err)
 	}
 
-	_, err = source.RunRequest(req)
+	_, err = source.RunRequest(ctx, req)
 	if err == nil {
 		t.Fatalf("expected error for non-2xx response")
 	}
@@ -62,12 +73,18 @@ func TestRunRequestIncludesErrorBodyWhenEnabled(t *testing.T) {
 		client: server.Client(),
 	}
 
-	req, err := nethttp.NewRequest(nethttp.MethodGet, server.URL, nil)
+	logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx := util.WithLogger(context.Background(), logger)
+
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("failed to build request: %v", err)
 	}
 
-	_, err = source.RunRequest(req)
+	_, err = source.RunRequest(ctx, req)
 	if err == nil {
 		t.Fatalf("expected error for non-2xx response")
 	}
