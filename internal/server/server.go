@@ -381,13 +381,18 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 
 	// cors
-	if slices.Contains(cfg.AllowedOrigins, "*") {
+	allowAllOrigins := slices.Contains(cfg.AllowedOrigins, "*")
+	if allowAllOrigins {
 		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
+	}
+	allowCredentials := !allowAllOrigins
+	if allowAllOrigins {
+		s.logger.WarnContext(ctx, "disabling Allow-Credentials because `--allowed-origins` includes `*`; browsers reject credentials with wildcard origins")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
-		AllowCredentials: true, // required since Toolbox uses auth headers
+		AllowCredentials: allowCredentials, // only enable when origins are explicit
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version"},
 		ExposedHeaders:   []string{"Mcp-Session-Id"}, // headers that are sent to clients
 		MaxAge:           300,                        // cache preflight results for 5 minutes
