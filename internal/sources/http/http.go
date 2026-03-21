@@ -56,9 +56,8 @@ type Config struct {
 	Timeout                     string            `yaml:"timeout"`
 	DefaultHeaders              map[string]string `yaml:"headers"`
 	QueryParams                 map[string]string `yaml:"queryParams"`
-	ReturnFullError             bool              `yaml:"returnFullError"`
-	IncludeResponseBodyInErrors bool              `yaml:"includeResponseBodyInErrors"`
-	DisableSslVerification      bool              `yaml:"disableSslVerification"`
+	ReturnFullError        bool              `yaml:"returnFullError"`
+	DisableSslVerification bool              `yaml:"disableSslVerification"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -163,8 +162,7 @@ func (s *Source) RunRequest(ctx context.Context, req *http.Request) (any, error)
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		returnFullError := s.ReturnFullError || s.IncludeResponseBodyInErrors
-		if returnFullError {
+		if s.ReturnFullError {
 			return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 		}
 
