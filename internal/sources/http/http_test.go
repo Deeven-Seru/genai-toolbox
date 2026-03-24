@@ -17,7 +17,7 @@ package http_test
 import (
 	"bytes"
 	"context"
-	"net/http"
+	nethttp "net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -146,8 +146,8 @@ func TestFailParseFromYaml(t *testing.T) {
 }
 
 func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
+	server := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		w.WriteHeader(nethttp.StatusBadRequest)
 		_, _ = w.Write([]byte("sensitive details"))
 	}))
 	defer server.Close()
@@ -170,7 +170,7 @@ func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
 	}
 	source := initialized.(*http.Source)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("failed to build request: %v", err)
 	}
@@ -188,8 +188,8 @@ func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
 }
 
 func TestRunRequestIncludesErrorBodyWhenEnabled(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+	server := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		w.WriteHeader(nethttp.StatusInternalServerError)
 		_, _ = w.Write([]byte("sensitive details"))
 	}))
 	defer server.Close()
@@ -213,7 +213,7 @@ func TestRunRequestIncludesErrorBodyWhenEnabled(t *testing.T) {
 	}
 	source := initialized.(*http.Source)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("failed to build request: %v", err)
 	}
