@@ -85,7 +85,7 @@ redeploying your application.
 You can run Toolbox directly with a [configuration file](../configure.md):
 
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 This runs the latest version of the toolbox server with your configuration file.
@@ -112,7 +112,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.29.0
+export VERSION=0.30.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -123,7 +123,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.29.0
+export VERSION=0.30.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -134,7 +134,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.29.0
+export VERSION=0.30.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -145,7 +145,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=0.29.0
+set VERSION=0.30.0
 curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -155,7 +155,7 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "0.29.0"
+$VERSION = "0.30.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
@@ -167,7 +167,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.29.0
+export VERSION=0.30.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -186,7 +186,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.29.0
+go install github.com/googleapis/genai-toolbox@v0.30.0
 ```
 
 {{% /tab %}}
@@ -199,7 +199,7 @@ go install github.com/googleapis/genai-toolbox@v0.29.0
 execute `toolbox` to start the server:
 
 ```sh
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 {{< notice note >}}
@@ -223,7 +223,7 @@ If you installed Toolbox using Homebrew, the `toolbox` binary is available in
 your system path. You can start the server with the same command:
 
 ```sh
-toolbox --tools-file "tools.yaml"
+toolbox --config "tools.yaml"
 ```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
@@ -1350,7 +1350,7 @@ Create a file named `tools.yaml`. This file defines the database connection, the
 SQL tools available, and the prompts the agents will use.
 
 ```yaml
-kind: sources
+kind: source
 name: my-foodiefind-db
 type: postgres
 host: 127.0.0.1
@@ -1359,7 +1359,7 @@ database: toolbox_db
 user: toolbox_user
 password: my-password
 ---
-kind: tools
+kind: tool
 name: find_user_by_email
 type: postgres-sql
 source: my-foodiefind-db
@@ -1370,7 +1370,7 @@ parameters:
     description: The email address of the user to find.
 statement: SELECT id FROM users WHERE email = $1;
 ---
-kind: tools
+kind: tool
 name: find_restaurant_by_name
 type: postgres-sql
 source: my-foodiefind-db
@@ -1381,7 +1381,7 @@ parameters:
     description: The name of the restaurant to find.
 statement: SELECT id FROM restaurants WHERE name = $1;
 ---
-kind: tools
+kind: tool
 name: find_review_by_user_and_restaurant
 type: postgres-sql
 source: my-foodiefind-db
@@ -1395,7 +1395,7 @@ parameters:
     description: The numerical ID of the restaurant.
 statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
 ---
-kind: prompts
+kind: prompt
 name: investigate_missing_review
 description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
 arguments:
@@ -1547,7 +1547,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1567,7 +1567,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-pg-source
     type: postgres
     host: 127.0.0.1
@@ -1576,7 +1576,7 @@ In this section, we will download Toolbox, configure our tools in a
     user: toolbox_user
     password: my-password
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-name
     type: postgres-sql
     source: my-pg-source
@@ -1587,7 +1587,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The name of the hotel.
     statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-location
     type: postgres-sql
     source: my-pg-source
@@ -1598,7 +1598,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The location of the hotel.
     statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
     ---
-    kind: tools
+    kind: tool
     name: book-hotel
     type: postgres-sql
     source: my-pg-source
@@ -1610,7 +1610,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to book.
     statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
     ---
-    kind: tools
+    kind: tool
     name: update-hotel
     type: postgres-sql
     source: my-pg-source
@@ -1631,7 +1631,7 @@ In this section, we will download Toolbox, configure our tools in a
       UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
       as date) WHERE id = $1;
     ---
-    kind: tools
+    kind: tool
     name: cancel-hotel
     type: postgres-sql
     source: my-pg-source
@@ -1642,7 +1642,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to cancel.
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
     ---
-    kind: toolsets
+    kind: toolset
     name: my-toolset
     tools:
       - search-hotels-by-name
@@ -1658,7 +1658,7 @@ In this section, we will download Toolbox, configure our tools in a
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
 ## Step 3: Connect to MCP Inspector
@@ -1709,7 +1709,7 @@ How to configure Toolbox's tools.yaml file.
 
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
+have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
@@ -1733,12 +1733,12 @@ A default value can be specified like `${ENV_NAME:default}`.
 
 ### Sources
 
-The `sources` section of your `tools.yaml` defines what data sources your
+`source` kind of your `tools.yaml` defines what data source your
 Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1
@@ -1753,12 +1753,12 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` defines the actions your agent can
+`tool` kind of your `tools.yaml` defines the actions your agent can
 take: what type of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
 ```yaml
-kind: tools
+kind: tool
 name: search-hotels-by-name
 type: postgres-sql
 source: my-pg-source
@@ -1775,18 +1775,18 @@ For more details on configuring different types of tools, see the
 
 ### Toolsets
 
-The `toolsets` section of your `tools.yaml` allows you to define groups of tools
+`toolset` kind of your `tools.yaml` allows you to define groups of tools
 that you want to be able to load together. This can be useful for defining
 different sets for different agents or different applications.
 
 ```yaml
-kind: toolsets
+kind: toolset
 name: my_first_toolset
 tools:
   - my_first_tool
   - my_second_tool
 ---
-kind: toolsets
+kind: toolset
 name: my_second_toolset
 tools:
   - my_second_tool
@@ -1805,11 +1805,11 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 ### Prompts
 
-The `prompts` section of your `tools.yaml` defines the templates containing
+`prompt` kind of your `tools.yaml` defines the templates containing
 structured messages and instructions for interacting with language models.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:
@@ -1854,7 +1854,7 @@ The following flags can be used to customize Toolbox logging:
 **Example:**
 
 ```bash
-./toolbox --tools-file "tools.yaml" --log-level warn --logging-format json
+./toolbox --config "tools.yaml" --log-level warn --logging-format json
 ```
 
 ### Level
@@ -1889,7 +1889,7 @@ The structured logging outputs log as JSON:
   "timestamp":"2024-11-04T16:45:11.987299-08:00",
   "severity":"ERROR",
   "logging.googleapis.com/sourceLocation":{...},
-  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
+  "message":"unable to parse config at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
 }
 ```
 
@@ -1900,42 +1900,225 @@ location information associated with the log entry, if any.
 
 ## Telemetry
 
-Toolbox is supports exporting metrics and traces to any OpenTelemetry compatible
+Toolbox supports exporting metrics and traces to any OpenTelemetry compatible
 exporter.
 
 ### Metrics
 
 A metric is a measurement of a service captured at runtime. The collected data
-can be used to provide important insights into the service. Toolbox provides the
-following custom metrics:
+can be used to provide important insights into the service. Toolbox metrics
+follow the [MCP Semantic Conventions][mcp-semconv] where applicable, and include
+additional Toolbox-specific metrics for deeper observability.
 
-| **Metric Name**                    | **Description**                                         |
-|------------------------------------|---------------------------------------------------------|
-| `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served   |
-| `toolbox.server.tool.get.count`    | Counts the number of tool manifest requests served      |
-| `toolbox.server.tool.get.invoke`   | Counts the number of tool invocation requests served    |
-| `toolbox.server.mcp.sse.count`     | Counts the number of mcp sse connection requests served |
-| `toolbox.server.mcp.post.count`    | Counts the number of mcp post requests served           |
+[mcp-semconv]: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/
 
-All custom metrics have the following attributes/labels:
+#### Standard Metrics
 
-| **Metric Attributes**      | **Description**                                           |
-|----------------------------|-----------------------------------------------------------|
-| `toolbox.name`             | Name of the toolset or tool, if applicable.               |
-| `toolbox.operation.status` | Operation status code, for example: `success`, `failure`. |
-| `toolbox.sse.sessionId`    | Session id for sse connection, if applicable.             |
-| `toolbox.method`           | Method of JSON-RPC request, if applicable.                |
+| **Metric Name**                 | **Type**  | **Unit** | **Description**                               |
+|---------------------------------|-----------|----------|-----------------------------------------------|
+| `mcp.server.operation.duration` | Histogram | `s`      | Duration of a single MCP JSON-RPC operation.  |
+| `mcp.server.session.duration`   | Histogram | `s`      | Duration of an MCP session.                   |
+
+#### Toolbox-specific Metrics
+
+| **Metric Name**                      | **Type**      | **Unit**    | **Description**                          |
+|--------------------------------------|---------------|-------------|------------------------------------------|
+| `toolbox.server.mcp.active_sessions` | UpDownCounter | `{session}` | Current count of active MCP sessions.    |
+| `toolbox.tool.execution.duration`    | Histogram     | `s`         | Duration of backend tool execution.      |
+
+Duration histograms use the following bucket boundaries (in seconds), as
+defined by the MCP semantic conventions:
+
+```
+0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300
+```
+
+{{< notice tip >}}
+OpenTelemetry Histograms automatically record bucket counts alongside the total count (`{name}_count`) and total sum (`{name}_sum`) of your observations.
+{{< /notice >}}
+
+#### Metric Attributes
+
+The attributes recorded with each metric are listed below. Attributes marked
+optional are only included when applicable.
+
+**`mcp.server.operation.duration`**
+
+| **Attribute**              | **Description**                                                | **Optional** |
+|----------------------------|----------------------------------------------------------------|:------------:|
+| `mcp.method.name`          | MCP JSON-RPC method name (e.g. `tools/call`).                  |              |
+| `network.transport`        | Network transport (`tcp` for HTTP/SSE, `pipe` for stdio).      |              |
+| `network.protocol.name`    | Network protocol name (`http` or `stdio`).                     |              |
+| `toolset.name`             | Name of the toolset being served.                              |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version (e.g. `2024-11-05`).          | Yes          |
+| `network.protocol.version` | HTTP protocol version (e.g. `1.1`).                            | Yes          |
+| `gen_ai.operation.name`    | GenAI operation name (e.g. `execute_tool`).                    | Yes          |
+| `gen_ai.tool.name`         | Name of the tool invoked (set for `tools/call` requests).      | Yes          |
+| `gen_ai.prompt.name`       | Name of the prompt retrieved (set for `prompts/get` requests). | Yes          |
+| `error.type`               | Description of the error if the operation failed.              | Yes          |
+
+<br>
+
+**`mcp.server.session.duration`** and **`toolbox.server.mcp.active_sessions`**
+
+| **Attribute**              | **Description**                                           | **Optional** |
+|----------------------------|-----------------------------------------------------------|:------------:|
+| `network.transport`        | Network transport (`tcp` for HTTP/SSE, `pipe` for stdio). |              |
+| `network.protocol.name`    | Network protocol name (`http` or `stdio`).                |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version (e.g. `2024-11-05`).     | Yes          |
+| `network.protocol.version` | HTTP protocol version (e.g. `1.1`).                       | Yes          |
+| `toolset.name`             | Name of the toolset (HTTP/SSE sessions only).             | Yes          |
+| `error.type`               | Description of the error if the session ended with a failure. | Yes      |
+
+<br>
+
+**`toolbox.tool.execution.duration`**
+
+| **Attribute**              | **Description**                              | **Optional** |
+|----------------------------|----------------------------------------------|:------------:|
+| `gen_ai.tool.name`         | Name of the tool invoked.                    |              |
+| `network.protocol.name`    | Network protocol name.                       | Yes          |
+| `network.protocol.version` | Network protocol version.                    | Yes          |
+| `error.type`               | Description of the error if invocation failed. | Yes        |
 
 ### Traces
 
 A trace is a tree of spans that shows the path that a request makes through an
 application.
 
-Spans generated by Toolbox server is prefixed with `toolbox/server/`. For
-example, when user run Toolbox, it will generate spans for the following, with
-`toolbox/server/init` as the root span:
+#### Initialization Spans
 
-![traces](./telemetry_traces.png)
+When Toolbox starts, it generates a root span `toolbox/server/init` with child
+spans for each component initialized:
+
+```
+toolbox/server/init
+├── toolbox/server/source/init         attr: source_type, source_name
+│   └── toolbox/server/source/connect  attr: source_type, source_name
+├── toolbox/server/auth/init           attr: auth_type, auth_name
+├── toolbox/server/embeddingmodel/init attr: model_type, model_name
+├── toolbox/server/tool/init           attr: tool_type, tool_name
+├── toolbox/server/toolset/init        attr: toolset.name
+└── toolbox/server/prompt/init         attr: prompt_type, prompt_name
+```
+
+| **Span Name**                        | **Description**                                | **Attributes**                       |
+|--------------------------------------|------------------------------------------------|--------------------------------------|
+| `toolbox/server/init`                | Root span for server initialization.           |                                      |
+| `toolbox/server/source/init`         | Initialization of a data source.               | `source_type`, `source_name`         |
+| `toolbox/server/source/connect`      | Database connection pool initialization.       | `source_type`, `source_name`         |
+| `toolbox/server/auth/init`           | Initialization of an auth service.             | `auth_type`, `auth_name`             |
+| `toolbox/server/embeddingmodel/init` | Initialization of an embedding model.          | `model_type`, `model_name`           |
+| `toolbox/server/tool/init`           | Initialization of a tool.                      | `tool_type`, `tool_name`             |
+| `toolbox/server/toolset/init`        | Initialization of a toolset.                   | `toolset.name`                       |
+| `toolbox/server/prompt/init`         | Initialization of a prompt.                    | `prompt_type`, `prompt_name`         |
+
+#### Request Spans
+
+Each incoming MCP request generates a transport span, with a child span for the
+MCP method being processed.
+
+**Toolbox connection spans**
+
+| **Span Name**               | **Description**                                             | **Key Attributes**                    |
+|-----------------------------|-------------------------------------------------------------|---------------------------------------|
+| `toolbox/server/mcp/sse`    | SSE session transport span (protocol `2024-11-05`).         | `mcp.session.id`, `toolset.name`      |
+| `toolbox/server/mcp/http`   | HTTP transport span (streamable HTTP).                      | `toolset.name`                        |
+| `toolbox/server/mcp/stdio`  | stdio transport span.                                       |                                       |
+
+<br>
+
+**MCP method spans**
+
+Method-level spans follow the [MCP Semantic Conventions][mcp-server-semconv]. Each span
+represents the processing of a single MCP request or notification. 
+
+<br> 
+
+The span name follows the format `{mcp.method.name} {target}` where target is 
+`{gen_ai.tool.name}` or `{gen_ai.prompt.name}` when applicable, otherwise just 
+`{mcp.method.name}`. Span status is set to `ERROR` when an error occurs, 
+with the status description set to the JSON-RPC error message.
+
+[mcp-server-semconv]: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#server
+
+All method spans include the following attributes:
+
+| **Attribute**              | **Description**                                           | **Optional** |
+|----------------------------|-----------------------------------------------------------|:------------:|
+| `mcp.method.name`          | MCP JSON-RPC method name.                                 |              |
+| `network.transport`        | Network transport used for the request.                   |              |
+| `network.protocol.name`    | Network protocol name.                                    |              |
+| `toolset.name`             | Name of the toolset.                                      |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version.                          | Yes          |
+| `network.protocol.version` | HTTP protocol version.                                    | Yes          |
+| `jsonrpc.request.id`       | JSON-RPC request ID.                                      | Yes          |
+| `jsonrpc.error.code`       | JSON-RPC error code, set when an error occurs.            | Yes          |
+| `error.type`               | Description of the error if the operation failed.         | Yes          |
+
+### Context Propagation
+
+Toolbox supports distributed tracing via the [W3C Trace Context][w3c-trace]
+standard. Incoming trace context is extracted in two ways:
+
+- **HTTP headers**: The `traceparent` and `tracestate` headers are read from
+  incoming HTTP requests.
+- **JSON-RPC `_meta` field**: The `params._meta.traceparent` and
+  `params._meta.tracestate` fields are read from the JSON-RPC message body.
+  This allows trace context to propagate over stdio transport.
+
+[w3c-trace]: https://www.w3.org/TR/trace-context/
+
+The examples below show how spans are connected across the client and Toolbox
+for each transport type.
+
+**STDIO Initialize**
+
+```
+initialize (CLIENT, trace=t1, span=s1)                                   # FROM MCP Client
+|
+--- toolbox/server/mcp/stdio (SERVER, trace=t1, span=s2, parent=s1)      # IN TOOLBOX
+    |
+    --- initialize (SERVER, trace=t1, span=s3, parent=s2)                # IN TOOLBOX
+```
+
+**STDIO Tool Call**
+
+```
+tools/call get-weather (CLIENT, trace=t1, span=s1)                       # FROM MCP Client
+|
+--- toolbox/server/mcp/stdio (SERVER, trace=t1, span=s2, parent=s1)      # IN TOOLBOX
+    |
+    --- tools/call get-weather (SERVER, trace=t1, span=s3, parent=s2)    # IN TOOLBOX
+```
+
+**SSE Connection**
+
+```
+connection (CLIENT, trace=t1, span=s2, parent=s1)                        # FROM MCP Client
+|
+--- toolbox/server/mcp/sse (SERVER, trace=t1, span=s3, parent=s2)        # IN TOOLBOX
+```
+
+**HTTP Initialize**
+
+```
+initialize (CLIENT, trace=t1, span=s1)                                   # FROM MCP Client
+|
+--- toolbox/server/mcp/http (SERVER, trace=t1, span=s2, parent=s1)       # IN TOOLBOX
+    |
+    --- initialize (SERVER, trace=t1, span=s3, parent=s2)                # IN TOOLBOX
+```
+
+**HTTP Tool Call**
+
+```
+tools/call get-weather (CLIENT, trace=t1, span=s1)                       # FROM MCP Client
+|
+--- toolbox/server/mcp/http (SERVER, trace=t1, span=s2, parent=s1)       # IN TOOLBOX
+    |
+    --- tools/call get-weather (SERVER, trace=t1, span=s3, parent=s2)    # IN TOOLBOX
+```
 
 ### Resource Attributes
 
@@ -2332,6 +2515,15 @@ After you install Looker in the MCP Store, resources and tools from the server a
       }
     }
     ```
+   If you want to access tools to develop LookML as well as query data
+   and create content, change the following line
+   ```json
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+   ```
+   to
+   ```json
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker,looker-dev", "--stdio"],
+   ```
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -2347,19 +2539,19 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2405,6 +2597,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. Start Gemini-CLI with the `gemini` command and use the command `/mcp` to see
    the configured MCP tools.
@@ -2434,6 +2635,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. Restart Claude Code to apply the new configuration.
 {{% /tab %}}
@@ -2460,6 +2670,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
         }
       }
     }
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 1. Restart Claude desktop.
@@ -2491,6 +2710,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. You should see a green active status after the server is successfully
    connected.
@@ -2518,6 +2746,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
         }
       }
     }
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 1. Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
@@ -2549,6 +2786,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 {{% /tab %}}
 
@@ -2575,7 +2821,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolb
         }
       }
     }
-
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 {{% /tab %}}
@@ -2645,12 +2899,20 @@ as well as get the database schema needed to write LookML effectively.
 1. **create_project_file**: Create a file in a project
 1. **update_project_file**: Update the contents of a file in a project
 1. **delete_project_file**: Delete a file in a project
+1. **get_project_directories**: Retrieves a list of project directories for a given LookML project.
+1. **create_project_directory**: Creates a new directory within a specified LookML project.
+1. **delete_project_directory**: Deletes a directory from a specified LookML project.
+1. **validate_project**: Check the syntax of a LookML project.
 1. **get_connections**: Get the list of connections
 1. **get_connection_schemas**: Get the list of schemas for a connection
 1. **get_connection_databases**: Get the list of databases for a connection
 1. **get_connection_tables**: Get the list of tables for a connection
 1. **get_connection_table_columns**: Get the list of columns for a table in a
-   connection
+  connection
+1. **get_lookml_tests**: Retrieves a list of available LookML tests for a project.
+1. **run_lookml_tests**: Executes specific LookML tests within a project.
+1. **create_view_from_table**: Generates boilerplate LookML views directly from the database schema.
+1. **project_git_branch**: Fetch and manipulate the git branch of a LookML project.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -2699,19 +2961,19 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3018,19 +3280,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3290,6 +3552,333 @@ will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
 
 
+# Oracle using MCP
+Connect your IDE to Oracle DB using Toolbox.
+
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like Oracle. This guide covers how to use [MCP Toolbox for Databases][toolbox]
+to expose your developer assistant tools to an Oracle instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline]  (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1. Create or select an Oracle instance.
+
+2. Create or reuse a database user and have the username and password ready.
+
+## Install MCP Toolbox
+
+3. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.26.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+4. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+5. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1. Install [Claude
+   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+{
+  "mcpServers": {
+    "oracle": {
+      "command": "./PATH/TO/toolbox",
+      "args": ["--prebuilt","oracledb","--stdio"],
+      "env": {
+        "ORACLE_CONNECTION_STRING": "",
+        "ORACLE_USERNAME": "",
+        "ORACLE_PASSWORD": "",
+        "ORACLE_WALLET": "",
+        "ORACLE_USE_OCI": "false"
+      }
+    }
+  }
+}
+    ```
+
+1. Restart Claude code to apply the new configuration.
+{{% /tab %}}
+
+{{% tab header="Claude desktop" lang="en" %}}
+
+1. Open Claude desktop and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the
+   new MCP server available.
+{{% /tab %}}
+
+{{% tab header="Cline" lang="en" %}}
+
+1. Open the Cline extension in VS Code and tap
+   the **MCP Servers** icon.
+1. Tap Configure MCP Servers to open the configuration file.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+1. You should see a green active status after the server is successfully
+   connected.
+{{% /tab %}}
+
+{{% tab header="Cursor" lang="en" %}}
+
+1. Create a `.cursor` directory in your project root if it doesn't exist.
+1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+1. Cursor and navigate to **Settings > Cursor
+   Settings > MCP**. You should see a green active status after the server is
+   successfully connected.
+{{% /tab %}}
+
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1. Open VS Code and
+   create a `.vscode` directory in your project root if it doesn't exist.
+1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "servers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Windsurf" lang="en" %}}
+
+1. Open Windsurf and navigate to the
+   Cascade assistant.
+1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the Gemini CLI.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the Gemini Code Assist extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Oracle using MCP. Try asking your AI
+assistant to list tables, create a table, or define and execute other SQL
+statements.
+
+The following tools are available to the LLM:
+
+1. **execute_sql**: execute any SQL statement
+2. **list_tables**: lists tables and descriptions
+3. **list_active_sessions**: Lists active database sessions.
+4. **get_query_plan**: Generates the execution plan for a SQL statement.
+5. **list_top_sql_by_resource**: Lists top SQL statements by resource usage.
+6. **list_tablespace_usage**: Lists tablespace usage.
+7. **list_invalid_objects**: Lists invalid objects.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}} 
+
 # PostgreSQL using MCP
 Connect your IDE to PostgreSQL using Toolbox.
 
@@ -3344,19 +3933,19 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3677,19 +4266,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3996,19 +4585,19 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -5628,7 +6217,7 @@ deployment will time out.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080"
+        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -5640,7 +6229,7 @@ deployment will time out.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
+        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
@@ -5671,7 +6260,7 @@ origins permitted to access the server.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST"
+        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -5683,7 +6272,7 @@ origins permitted to access the server.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
+        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
@@ -6252,7 +6841,7 @@ services:
       - "5000:5000"
     volumes:
       - ./config:/config
-    command: [ "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0"]
+    command: [ "--config", "/config/tools.yaml", "--address", "0.0.0.0"]
     depends_on:
       db:
         condition: service_healthy
@@ -6287,13 +6876,13 @@ networks:
 
 {{< notice tip >}}  
 To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
-list of hosts for validation. E.g. `command: ["--tools-file",
+list of hosts for validation. E.g. `command: ["--config",
 "/config/tools.yaml", "--address", "0.0.0.0","--allowed-hosts",
 "localhost:5000"]`
 
 To implement CORs, use the `--allowed-origins` flag to specify a
 list of origins permitted to access the server. E.g. `command: [
-"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
+"--config", "/config/tools.yaml", "--address", "0.0.0.0",
 "--allowed-origins", "https://foo.bar"]`
 {{< /notice >}}
 
@@ -6445,6 +7034,36 @@ There are a couple of steps to run and use a Collector.
 [metrics-explorer]: https://console.cloud.google.com/monitoring/metrics-explorer
 [trace-explorer]: https://console.cloud.google.com/traces
 
+## Telemetry with Agnost AI
+
+[Agnost AI][agnost] provides a managed OTLP endpoint, so you can send telemetry
+directly from Toolbox without running a local Collector.
+
+[agnost]: https://app.agnost.ai
+
+### Setup
+
+1. Sign in to Agnost and retrieve your **Organization ID** from Agnost AI dashboard.
+
+1. Set your organization ID as an OTLP header before running Toolbox:
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_HEADERS="X-Agnost-Org-Id=<your-agnost-org-id>"
+    ```
+
+    Alternatively, add this to your shell profile or environment configuration
+    so it is set automatically on each run.
+
+1. Run Toolbox with the `--telemetry-otlp` flag pointing to the Agnost
+   endpoint:
+
+    ```bash
+    ./toolbox --telemetry-otlp=otel.agnost.ai
+    ```
+
+Toolbox will now export traces and metrics directly to Agnost. No local
+Collector is required.
+
 
 # Generate Agent Skills
 How to generate agent skills from a toolset.
@@ -6476,10 +7095,10 @@ toolbox <tool-source> skills-generate \
   --additional-notes <additional-notes>
 ```
 
-- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
-- `--name`: Name of the generated skill.
+- `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
+- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
 - `--description`: Description of the generated skill.
-- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 - `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
@@ -6512,7 +7131,7 @@ toolbox <tool-source> skills-generate \
 2. Generate the skill:
 
    ```bash
-   toolbox --tools-file tools.yaml skills-generate \
+   toolbox --config tools.yaml skills-generate \
      --name "my-skill" \
      --toolset "my_toolset" \
      --description "A skill containing multiple tools" \
@@ -6585,7 +7204,7 @@ The basic syntax for the command is:
 toolbox <tool-source> invoke <tool-name> [params]
 ```
 
-- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
+- `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
 - `<tool-name>`: The name of the tool you want to call. This must match the name defined in your `tools.yaml`.
 - `[params]`: (Optional) A JSON string representing the arguments for the tool.
 
@@ -6596,7 +7215,7 @@ toolbox <tool-source> invoke <tool-name> [params]
 If your tool takes no parameters, simply provide the tool name:
 
 ```bash
-toolbox  --tools-file tools.yaml invoke my-simple-tool
+toolbox  --config tools.yaml invoke my-simple-tool
 ```
 
 ### 2. Calling a Tool with Parameters
@@ -6608,13 +7227,13 @@ For tools that require arguments, pass them as a JSON string. Ensure you escape 
 Assuming a tool named `mytool` taking `a` and `b`:
 
 ```bash
-toolbox --tools-file tools.yaml invoke mytool '{"a": 10, "b": 20}' 
+toolbox --config tools.yaml invoke mytool '{"a": 10, "b": 20}' 
 ```
 
 **Example: A tool that queries a database**
 
 ```bash
-toolbox  --tools-file tools.yaml invoke db-query '{"sql": "SELECT * FROM users LIMIT 5"}'
+toolbox  --config tools.yaml invoke db-query '{"sql": "SELECT * FROM users LIMIT 5"}'
 ```
 
 ### 3. Using Prebuilt Configurations
@@ -6627,7 +7246,7 @@ toolbox --prebuilt cloudsql-postgres invoke cloudsql-postgres-list-instances
 
 ## Troubleshooting
 
-- **Tool not found:** Ensure the `<tool-name>` matches exactly what is in your YAML file and that the file is correctly loaded via `--tools-file`.
+- **Tool not found:** Ensure the `<tool-name>` matches exactly what is in your YAML file and that the file is correctly loaded via `--config`.
 - **Invalid parameters:** Double-check your JSON syntax. The error message will usually indicate if the JSON parsing failed or if the parameters didn't match the tool's schema.
 - **Auth errors:** The `invoke` command currently does not support flows requiring client-side authorization (like OAuth flow initiation via the CLI). It works best for tools using service-side authentication (e.g., Application Default Credentials).
 
@@ -6666,12 +7285,12 @@ If you are accessing Toolbox with multiple applications, each
 {{< /notice >}}
 
 ```yaml
-kind: authServices
+kind: authService
 name: my_auth_app_1
 type: google
 clientId: ${YOUR_CLIENT_ID_1}
 ---
-kind: authServices
+kind: authService
 name: my_auth_app_2
 type: google
 clientId: ${YOUR_CLIENT_ID_2}
@@ -6692,7 +7311,7 @@ configuration for each tool that should use it:
 
 ## Specifying ID Tokens from Clients
 
-After [configuring](#example) your `authServices` section, use a Toolbox SDK to
+After [configuring](#example) your `authService`, use a Toolbox SDK to
 add your ID tokens to the header of a Tool invocation request. When specifying a
 token you will provide a function (that returns an id). This function is called
 when the tool is invoked. This allows you to cache and refresh the ID token as
@@ -6979,7 +7598,7 @@ id-token][provided-claims] can be used for the parameter.
 ## Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: ${YOUR_GOOGLE_CLIENT_ID}
@@ -7003,7 +7622,7 @@ Sources represent your different data sources that a tool can interact with.
 
 
 A Source represents a data sources that a tool can interact with. You can define
-Sources as a map in the `sources` section of your `tools.yaml` file. Typically,
+Sources as a map in the `source` section of your `tools.yaml` file. Typically,
 a source configuration will contain any information needed to connect with and
 interact with the database.
 
@@ -7013,7 +7632,7 @@ instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-source
 type: cloud-sql-postgres
 project: my-project-id
@@ -7201,7 +7820,7 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-alloydb-pg-source
 type: alloydb-postgres
 project: my-project-id
@@ -7265,11 +7884,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-alloydb-admin
 type: alloydb-admin
 ---
-kind: sources
+kind: source
 name: my-oauth-alloydb-admin
 type: alloydb-admin
 useClientOAuth: true
@@ -7403,7 +8022,7 @@ identity used has been granted the correct IAM permissions.
 Initialize a BigQuery source that uses ADC:
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigquery-source
 type: "bigquery"
 project: "my-project-id"
@@ -7422,7 +8041,7 @@ project: "my-project-id"
 Initialize a BigQuery source that uses the client's access token:
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigquery-client-auth-source
 type: "bigquery"
 project: "my-project-id"
@@ -7510,7 +8129,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigtable-source
 type: "bigtable"
 project: "my-project-id"
@@ -7547,7 +8166,7 @@ distributed architectures, and a flexible approach to schema definition.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cassandra-source
 type: cassandra
 hosts:
@@ -7626,7 +8245,7 @@ ClickHouse supports multiple protocols:
 ### Secure Connection Example
 
 ```yaml
-kind: sources
+kind: source
 name: secure-clickhouse-source
 type: clickhouse
 host: clickhouse.example.com
@@ -7641,7 +8260,7 @@ secure: true
 ### HTTP Protocol Example
 
 ```yaml
-kind: sources
+kind: source
 name: http-clickhouse-source
 type: clickhouse
 host: localhost
@@ -7790,7 +8409,7 @@ identity used has been granted the correct IAM permissions.
 Initialize a Cloud Healthcare API source that uses ADC:
 
 ```yaml
-kind: sources
+kind: source
 name: my-healthcare-source
 type: "cloud-healthcare"
 project: "my-project-id"
@@ -7806,7 +8425,7 @@ dataset: "my-healthcare-dataset-id"
 Initialize a Cloud Healthcare API source that uses the client's access token:
 
 ```yaml
-kind: sources
+kind: source
 name: my-healthcare-client-auth-source
 type: "cloud-healthcare"
 project: "my-project-id"
@@ -7866,7 +8485,7 @@ Authentication can be handled in two ways:
 Initialize a Cloud Logging Admin source that uses ADC:
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-logging
 type: cloud-logging-admin
 project: my-project-id
@@ -7875,7 +8494,7 @@ project: my-project-id
 Initialize a Cloud Logging Admin source that uses client-side OAuth:
 
 ```yaml
-kind: sources
+kind: source
 name: my-oauth-cloud-logging
 type: cloud-logging-admin
 project: my-project-id
@@ -7885,7 +8504,7 @@ useClientOAuth: true
 Initialize a Cloud Logging Admin source that uses service account impersonation:
 
 ```yaml
-kind: sources
+kind: source
 name: my-impersonated-cloud-logging
 type: cloud-logging-admin
 project: my-project-id
@@ -7923,11 +8542,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-monitoring
 type: cloud-monitoring
 ---
-kind: sources
+kind: source
 name: my-oauth-cloud-monitoring
 type: cloud-monitoring
 useClientOAuth: true
@@ -8065,7 +8684,7 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-mysql-source
 type: cloud-sql-mysql
 project: my-project-id
@@ -8084,16 +8703,16 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                                      |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
-| user      |  string  |     false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                                            |
-| password  |  string  |     false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                                    |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                                         |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------------------------------------------------|
+| type      |  string  |     true     | Must be "cloud-sql-mysql".                                                                                              |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                           |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                            |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                 |
+| database  |  string  |    false     | Name of the MySQL database to connect to (e.g. "my_db").                                                                |
+| user      |  string  |    false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
+| password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
+| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |
 
 
 # Cloud SQL for PostgreSQL
@@ -8270,7 +8889,7 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-pg-source
 type: cloud-sql-postgres
 project: my-project-id
@@ -8394,7 +9013,7 @@ Currently, this source only uses standard authentication. You will need to
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-mssql-instance
 type: cloud-sql-mssql
 project: my-project
@@ -8447,11 +9066,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-admin
 type: cloud-sql-admin
 ---
-kind: sources
+kind: source
 name: my-oauth-cloud-sql-admin
 type: cloud-sql-admin
 useClientOAuth: true
@@ -8722,7 +9341,7 @@ allowing tools to execute SQL queries against it.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-couchbase-instance
 type: couchbase
 connectionString: couchbase://localhost
@@ -8778,7 +9397,7 @@ applying artificial intelligence and machine learning.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-dataplex-source
 type: "dataplex"
 project: "my-project-id"
@@ -9156,7 +9775,7 @@ set up your ADC.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-dataproc-source
 type: dataproc
 project: my-project
@@ -9220,7 +9839,7 @@ and user credentials for that namespace.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-dgraph-source
 type: dgraph
 dgraphUrl: https://xxxx.cloud.dgraph.io
@@ -9302,7 +9921,7 @@ applying permissions to an API key.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-elasticsearch-source
 type: "elasticsearch"
 addresses:
@@ -9352,7 +9971,7 @@ user][fb-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my_firebird_db
 type: firebird
 host: "localhost"
@@ -9437,7 +10056,7 @@ database named `(default)` will be used.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-firestore-source
 type: "firestore"
 project: "my-project-id"
@@ -9469,12 +10088,12 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-gda-source
 type: cloud-gemini-data-analytics
 projectId: my-project-id
 ---
-kind: sources
+kind: source
 name: my-oauth-gda-source
 type: cloud-gemini-data-analytics
 projectId: my-project-id
@@ -9508,7 +10127,7 @@ and other HTTP-accessible resources.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-http-source
 type: http
 baseUrl: https://api.example.com/data
@@ -9595,7 +10214,7 @@ To initialize the application default credential run `gcloud auth login
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-looker-source
 type: looker
 base_url: http://looker.example.com
@@ -9687,7 +10306,7 @@ MariaDB user][mariadb-users] to log in to the database.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my_mariadb_db
 type: mysql
 host: 127.0.0.1
@@ -9843,7 +10462,7 @@ can omit the password field.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mindsdb-source
 type: mindsdb
 host: 127.0.0.1
@@ -9859,7 +10478,7 @@ queryTimeout: 30s # Optional: query timeout duration
 Here's a working configuration that has been tested:
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: mindsdb
 host: 127.0.0.1
@@ -9922,7 +10541,7 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mongodb
 type: mongodb
 uri: "mongodb+srv://username:password@host.mongodb.net"       
@@ -9984,7 +10603,7 @@ MySQL user][mysql-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mysql-source
 type: mysql
 host: 127.0.0.1
@@ -10005,16 +10624,16 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**    | **type** | **required** | **description**                                                                                 |
-| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| type         |  string  |     true     | Must be "mysql".                                                                                |
-| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
-| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
-| database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |
-| user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
-| password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
-| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
-| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
+| **field**    |      **type**      | **required** | **description**                                                                                                                                 |
+|--------------|:------------------:|:------------:|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| type         |       string       |     true     | Must be "mysql".                                                                                                                                |
+| host         |       string       |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                                                    |
+| port         |       string       |     true     | Port to connect to (e.g. "3306").                                                                                                               |
+| user         |       string       |    false     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                                                                    |
+| password     |       string       |    false     | Password of the MySQL user (e.g. "my-password").                                                                                                |
+| database     |       string       |    false     | Name of the MySQL database to connect to (e.g. "my_db").                                                                                        |
+| queryTimeout |       string       |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied.                                                 |
+| queryParams  | map<string,string> |    false     | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
 
 
 # Neo4j
@@ -10047,7 +10666,7 @@ user if available.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-neo4j-source
 type: neo4j
 uri: neo4j+s://xxxx.databases.neo4j.io:7687
@@ -10103,7 +10722,7 @@ with SSL).
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-oceanbase-source
 type: oceanbase
 host: 127.0.0.1
@@ -10243,7 +10862,7 @@ using a TNS (Transparent Network Substrate) alias.
 This example demonstrates the four connection methods you could choose from:
 
 ```yaml
-kind: sources
+kind: source
 name: my-oracle-source
 type: oracle
 
@@ -10275,7 +10894,7 @@ Oracle Wallet allows you to store credentails used for database connection. Depe
 The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
 
 ```yaml
-kind: sources
+kind: source
 name: pure-go-wallet
 type: oracle
 connectionString: "127.0.0.1:1521/XEPDB1"
@@ -10291,7 +10910,7 @@ walletLocation: "/path/to/my/wallet/directory"
 For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
 
 ```yaml
-kind: sources
+kind: source
 name: oci-wallet
 type: oracle
 connectionString: "127.0.0.1:1521/XEPDB1"
@@ -10321,6 +10940,8 @@ instead of hardcoding your secrets into the configuration file.
 | tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                                                                                   |
 | tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set.                                                             |
 | useOCI           |   bool   |    false     | If true, uses the OCI-based driver (godror) which supports Oracle Wallet/Kerberos but requires the Oracle Instant Client libraries to be installed. Defaults to false (pure Go driver). |
+| walletLocation   |  string  |    false     | Path to the directory containing the wallet files for the pure Go driver (`useOCI: false`). |
+
 
 
 # PostgreSQL
@@ -10427,7 +11048,7 @@ PostgreSQL user][pg-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1
@@ -10486,7 +11107,7 @@ connections must authenticate in order to connect.
 Specify your AUTH string in the password field:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-instance
 type: redis
 address:
@@ -10514,7 +11135,7 @@ string.
 Here is an example tools.yaml config with [AUTH][auth] enabled:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-cluster-instance
 type: redis
 address:
@@ -10531,7 +11152,7 @@ Here is an example tools.yaml config for Memorystore Redis Cluster instances
 using IAM authentication:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-cluster-instance
 type: redis
 address:
@@ -10612,7 +11233,7 @@ set up your ADC.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-serverless-spark-source
 type: serverless-spark
 project: my-project-id
@@ -10665,7 +11286,7 @@ database user][singlestore-user] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-singlestore-source
 type: singlestore
 host: 127.0.0.1
@@ -10722,7 +11343,7 @@ Snowflake user to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-sf-source
 type: snowflake
 account: ${SNOWFLAKE_ACCOUNT}
@@ -10813,7 +11434,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-spanner-source
 type: "spanner"
 project: "my-project-id"
@@ -10869,7 +11490,7 @@ SQL Server user][mssql-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mssql-source
 type: mssql
 host: 127.0.0.1
@@ -10942,7 +11563,7 @@ You need a SQLite database file. This can be:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-sqlite-db
 type: "sqlite"
 database: "/path/to/database.db"
@@ -10951,7 +11572,7 @@ database: "/path/to/database.db"
 For an in-memory database:
 
 ```yaml
-kind: sources
+kind: source
 name: my-sqlite-memory-db
 type: "sqlite"
 database: ":memory:"
@@ -11017,7 +11638,7 @@ console.
 - TiDB Cloud
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-tidb-cloud-source
     type: tidb
     host: gateway01.us-west-2.prod.aws.tidbcloud.com
@@ -11031,7 +11652,7 @@ console.
 - Self-Hosted TiDB
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-tidb-source
     type: tidb
     host: 127.0.0.1
@@ -11090,7 +11711,7 @@ the catalogs and schemas you want to query.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-trino-source
 type: trino
 host: trino.example.com
@@ -11149,7 +11770,7 @@ the [official Valkey website](https://valkey.io/topics/quickstart/).
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-valkey-instance
 type: valkey
 address:
@@ -11173,7 +11794,7 @@ authentication. Grant your account the required [IAM role][iam] and set
 `useGCPIAM` to `true`:
 
 ```yaml
-kind: sources
+kind: source
 name: my-valkey-instance
 type: valkey
 address:
@@ -11211,7 +11832,7 @@ compatibility.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-yb-source
 type: yugabytedb
 host: 127.0.0.1
@@ -11288,10 +11909,10 @@ ${ENV_NAME} instead of hardcoding your API keys into the configuration file.
 
 ### Step 1 - Define an Embedding Model
 
-Define an embedding model in the `embeddingModels` section:
+Define an embedding model with the `embeddingModel` kind:
 
 ```yaml
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model # Name of the embedding model
 type: gemini
 model: gemini-embedding-001
@@ -11306,7 +11927,7 @@ Use the defined embedding model, embed your query parameters using the
 
 ```yaml
 # Vector ingestion tool
-kind: tools
+kind: tool
 name: insert_embedding
 type: postgres-sql
 source: my-pg-instance
@@ -11325,7 +11946,7 @@ parameters:
     embeddedBy: gemini-model
 ---
 # Semantic search tool
-kind: tools
+kind: tool
 name: search_embedding
 type: postgres-sql
 source: my-pg-instance
@@ -11391,7 +12012,7 @@ information.
 ## Example
 
 ```yaml
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
@@ -11419,11 +12040,11 @@ Tools define actions an agent can take -- such as reading and writing to a sourc
 
 
 A tool represents an action your agent can take, such as running a SQL
-statement. You can define Tools as a map in the `tools` section of your
+statement. You can define Tools as a map with the `tool` kind in your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: postgres-sql
 source: my-pg-instance
@@ -11615,7 +12236,7 @@ the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_user_id
 type: postgres-sql
 source: my-pg-instance
@@ -11626,7 +12247,7 @@ parameters:
     type: string
     description: Auto-populated from Google login
     authServices:
-      # Refer to one of the `authServices` defined
+      # Refer to one of the `authService` defined
       - name: my-google-auth
         # `sub` is the OIDC claim field for user ID
         field: sub
@@ -11666,7 +12287,7 @@ can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
-kind: tools
+kind: tool
 name: select_columns_from_table
 type: postgres-sql
 source: my-pg-instance
@@ -11711,13 +12332,13 @@ specifying an `authRequired` field. Specify a list of
 [authServices](../authServices/) defined in the previous section.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_all_flight
 type: postgres-sql
 source: my-pg-instance
 statement: |
   SELECT * FROM flights
-# A list of `authServices` defined previously
+# A list of `authService` defined previously
 authRequired:
   - my-google-auth
   - other-auth-service
@@ -11743,16 +12364,16 @@ and provide appropriate user experiences.
 Annotations can be specified in YAML tool configuration:
 
 ```yaml
-tools:
-  my_query_tool:
-    kind: mongodb-find-one
-    source: my-mongodb
-    description: Find a single document
-    database: mydb
-    collection: users
-    annotations:
-      readOnlyHint: true
-      idempotentHint: true
+kind: tool
+name: my_query_tool
+type: mongodb-find-one
+source: my-mongodb
+description: Find a single document
+database: mydb
+collection: users
+annotations:
+  readOnlyHint: true
+  idempotentHint: true
 ```
 
 ### Default Annotations
@@ -13204,7 +13825,7 @@ federated database capabilities.
 Here's a complete working configuration that has been tested:
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: mindsdb
 host: 127.0.0.1
@@ -13212,7 +13833,7 @@ port: 47335
 database: files
 user: mindsdb
 ---
-kind: tools
+kind: tool
 name: mindsdb-execute-sql
 type: mindsdb-execute-sql
 source: my-pg-source
@@ -13336,7 +13957,7 @@ can be sent to a Large Language Model (LLM). The Toolbox server implements the
 specification, allowing clients to discover and retrieve these prompts.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:
@@ -13416,7 +14037,7 @@ Here is an example of a simple prompt that takes a single argument, code, and
 asks an LLM to review it.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:
@@ -13432,7 +14053,7 @@ You can define prompts with multiple messages to set up more complex
 conversational contexts, like a role-playing scenario.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: roleplay_scenario
 description: "Sets up a roleplaying scenario with initial messages."
 arguments:
@@ -13597,7 +14218,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.29.0"
+    export VERSION="0.30.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -13617,7 +14238,7 @@ First, define the data source for your tools. This tells Toolbox how to connect
 to your AlloyDB instance.
 
 ```yaml
-kind: sources
+kind: source
 name: alloydb-pg-source
 type: alloydb-postgres
 project: YOUR_PROJECT_ID
@@ -13639,7 +14260,7 @@ structured queries like managing a shopping cart. Add the following to your
 `tools.yaml` file:
 
 ```yaml
-kind: tools
+kind: tool
 name: access-cart-information
 type: postgres-sql
 source: alloydb-pg-source
@@ -13664,7 +14285,7 @@ statement: |
   WHERE
     c.cart_id = $1;
 ---
-kind: tools
+kind: tool
 name: add-to-cart
 type: postgres-sql
 source: alloydb-pg-source
@@ -13690,7 +14311,7 @@ statement: |
     cart_items (cart_id, product_id, quantity, price)
   VALUES($1,$2,$3,$4);
 ---
-kind: tools
+kind: tool
 name: delete-from-cart
 type: postgres-sql
 source: alloydb-pg-source
@@ -13715,11 +14336,11 @@ statement: |
 ### 2. Semantic Search Tools
 
 These tools use vector embeddings to find the most relevant results based on the
-meaning of a user's query, rather than just keywords. Append the following tools
-to the `tools` section in your `tools.yaml`:
+meaning of a user's query, rather than just keywords. Append the following tool
+with the `tool` kind in your `tools.yaml`:
 
 ```yaml
-kind: tools
+kind: tool
 name: search-product-recommendations
 type: postgres-sql
 source: alloydb-pg-source
@@ -13758,11 +14379,10 @@ statement: |
 
 2. Configure your NL2SQL tool to use your configuration. These tools translate
    natural language questions into SQL queries, allowing users to interact with
-   the database conversationally. Append the following tool to the `tools`
-   section:
+   the database conversationally. Append the following tool with the `tool` kind:
 
 ```yaml
-kind: tools
+kind: tool
 name: ask-questions-about-products
 type: alloydb-ai-nl
 source: alloydb-pg-source
@@ -13777,7 +14397,7 @@ Finally, group the tools into a `toolset` to make them available to the model.
 Add the following to the end of your `tools.yaml` file:
 
 ```yaml
-kind: toolsets
+kind: toolset
 name: flower_shop
 tools:
   - access-cart-information
@@ -13795,7 +14415,7 @@ For more info on tools, check out the
 Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 5: Connect to MCP Inspector
@@ -14031,7 +14651,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -14053,13 +14673,13 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-bigquery-source
     type: bigquery
     project: YOUR_PROJECT_ID
     location: us
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-name
     type: bigquery-sql
     source: my-bigquery-source
@@ -14070,7 +14690,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The name of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-location
     type: bigquery-sql
     source: my-bigquery-source
@@ -14081,7 +14701,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The location of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
     ---
-    kind: tools
+    kind: tool
     name: book-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14093,7 +14713,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The ID of the hotel to book.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: update-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14112,7 +14732,7 @@ to use BigQuery, and then run the Toolbox server.
     statement: >-
         UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: cancel-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14124,16 +14744,15 @@ to use BigQuery, and then run the Toolbox server.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
     ```
 
-    **Important Note on `toolsets`**: The `tools.yaml` content above does not
-    include a `toolsets` section. The Python agent examples in Step 3 (e.g.,
+    **Important Note on `toolset`**: The `tools.yaml` content above does not
+    include a `toolset` kind. The Python agent examples in Step 3 (e.g.,
     `await toolbox_client.load_toolset("my-toolset")`) rely on a toolset named
-    `my-toolset`. To make those examples work, you will need to add a `toolsets`
-    section to your `tools.yaml` file, for example:
+    `my-toolset`. To make those examples work, you will need to add a `toolset`
+    to your `tools.yaml` file, for example:
 
     ```yaml
     # Add this to your tools.yaml if using load_toolset("my-toolset")
-    # Ensure it's at the same indentation level as 'sources:' and 'tools:'
-    kind: toolsets
+    kind: toolset
     name: my-toolset
     tools:
         - search-hotels-by-name
@@ -14152,7 +14771,7 @@ to use BigQuery, and then run the Toolbox server.
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
     {{< notice note >}}
@@ -14678,7 +15297,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -14700,13 +15319,13 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-bigquery-source
     type: bigquery
     project: YOUR_PROJECT_ID
     location: us
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-name
     type: bigquery-sql
     source: my-bigquery-source
@@ -14717,7 +15336,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The name of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-location
     type: bigquery-sql
     source: my-bigquery-source
@@ -14728,7 +15347,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The location of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
     ---
-    kind: tools
+    kind: tool
     name: book-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14740,7 +15359,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to book.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: update-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14759,7 +15378,7 @@ In this section, we will download Toolbox, configure our tools in a
     statement: >-
       UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: cancel-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -14770,7 +15389,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to cancel.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
     ---
-    kind: toolsets
+    kind: toolset
     name: my-toolset
     tools:
       - search-hotels-by-name
@@ -14786,7 +15405,7 @@ In this section, we will download Toolbox, configure our tools in a
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
 ## Step 3: Connect to MCP Inspector
@@ -14883,7 +15502,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -15008,7 +15627,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -15027,11 +15646,7 @@ In this section, we will download Toolbox and run the Toolbox server.
       "mcpServers": {
         "looker-toolbox": {
           "command": "/path/to/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -15044,6 +15659,16 @@ In this section, we will download Toolbox and run the Toolbox server.
 
    In some instances you may need to append `:19999` to
    the LOOKER_BASE_URL.
+
+   If you want to access tools to develop LookML as well as query data
+   and create content, change the following line
+   ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+   ```
+   to
+   ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+   ```
 
 ## Step 3: Start Gemini-CLI
 
@@ -15118,7 +15743,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.29.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -15251,14 +15876,14 @@ Write the following into a `tools.yaml` file:
 \+
 
 ```yaml
-kind: sources
+kind: source
 name: my-neo4j-source
 type: neo4j
 uri: bolt://localhost:7687
 user: neo4j
 password: my-password # Replace with your actual password
 ---
-kind: tools
+kind: tool
 name: search-movies-by-actor
 type: neo4j-cypher
 source: my-neo4j-source
@@ -15271,7 +15896,7 @@ statement: |
   MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
   RETURN m.title AS title, m.year AS year, m.genre AS genre
 ---
-kind: tools
+kind: tool
 name: get-actor-for-movie
 type: neo4j-cypher
 source: my-neo4j-source
@@ -15290,7 +15915,7 @@ Run the Toolbox server, pointing to the `tools.yaml` file you created earlier.
 \+
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 3: Connect to MCP Inspector
@@ -15620,7 +16245,7 @@ You have two options:
 Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual Snowflake configuration.
 
 ```yaml
-kind: sources
+kind: source
 name: snowflake-source
 type: snowflake
 account: ${SNOWFLAKE_ACCOUNT}
@@ -15631,13 +16256,13 @@ schema: ${SNOWFLAKE_SCHEMA}
 warehouse: ${SNOWFLAKE_WAREHOUSE}
 role: ${SNOWFLAKE_ROLE}
 ---
-kind: tools
+kind: tool
 name: execute_sql
 type: snowflake-execute-sql
 source: snowflake-source
 description: Use this tool to execute SQL.
 ---
-kind: tools
+kind: tool
 name: list_tables
 type: snowflake-sql
 source: snowflake-source
@@ -15657,7 +16282,7 @@ For more info on tools, check out the
 Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 5: Connect to MCP Inspector
@@ -15787,6 +16412,40 @@ Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
 MCP](../how-to/connect_via_mcp.md) on how to connect to Toolbox with an MCP
 client.
 
+
+# Versioning Policy
+How MCP Toolbox manages versions and breaking changes.
+
+MCP Toolbox for Databases follows [Semantic Versioning](https://semver.org/).
+
+## Definition of the Public API
+
+For the purposes of this policy, the "Public API" includes:
+
+* **Server**   
+  * **CLI:** The execution engine and lifecycle manager for tool hosting.  
+  * **Configuration Manifests:** The structural specification of `tools.yaml`.  
+  * **Pre-built Configs:** Curated sets of tools (and other MCP primitives) including the CLI flag, source configuration, toolsets names, and tools. 
+  * **MCP versions**: Supporting MCP revisions and transport protocols.   
+* **Client SDKs:** Both the foundational "Base SDKs" and the orchestration-specific "Integrated SDKs".
+
+## What Constitutes a Breaking Change (Major Version Bump) 
+
+A major version bump (e.g., v1.x.x to v2.0.0) is required for the following modifications:
+
+* **Server:** Supporting MCP revisions and transport protocols.   
+  * **CLI & Config:** Removing existing CLI flags or introducing backwards-incompatible changes to the core configuration format.  
+  * **Pre-built Configs:** Renaming or removing the name of a pre-built toolset. Agents rely on the toolset names for discovery, so altering them breaks downstream integrations.  
+* **Client SDKs:** Removing or renaming public methods, modifying expected input payload structures, or changing expected return types.  
+* **MCP Protocol Support:** Removing support for an existing MCP protocol version. Until official MCP protocol guidelines dictate otherwise, dropping an MCP version counts as a major breaking change. A deprecation warning will be provided prior to removal, aligning with typical new specification cycle timelines.
+
+## What is NOT a Breaking Change (Minor/Patch Version) 
+
+The following changes will **not** trigger a major version bump:
+
+* **Server**  
+  * **Pre-built Config Modifications:** Adding, removing, or renaming individual tools within a pre-built toolset, as well as modifying server description, prompts, resources, tool descriptions or inputs, are treated as non-breaking changes.  
+* **Experimental Features:** Features or wrapper packages explicitly documented as "Preview" or "Beta" may introduce breaking changes without a major version bump to the core project.
 
 # SDKs
 Client SDKs to connect to the MCP Toolbox server.
@@ -15940,20 +16599,13 @@ You can explicitly select a protocol using the `protocol` option during toolset 
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{<  notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
 
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```python
 from toolbox_adk import ToolboxToolset
@@ -15961,7 +16613,7 @@ from toolbox_core.protocol import Protocol
 
 toolset = ToolboxToolset(
     server_url="http://127.0.0.1:5000",
-    protocol=Protocol.TOOLBOX
+    protocol=Protocol.MCP
 )
 ```
 
@@ -16087,7 +16739,11 @@ creds = CredentialStrategy.from_adk_credentials(auth_credential, scheme)
 ### 8. Tool-Specific Authentication
 *Resolve authentication tokens dynamically for specific tools.*
 
-Some tools may define their own authentication requirements (e.g., Salesforce OAuth, GitHub PAT) via `authSources` in their schema. You can provide a mapping of getters to resolve these tokens at runtime.
+Some tools may define their own authentication requirements (e.g., Salesforce OAuth, GitHub PAT) via `authServices` in their schema. You can provide a mapping of getters to resolve these tokens at runtime.
+
+{{< notice tip >}}
+Getters can optionally accept the ADK `ToolContext` as a single argument. This enables seamless integration of dynamic, end-user tokens that are tied to the current agent execution state.
+{{< /notice >}}
 
 ```python
 async def get_salesforce_token():
@@ -16097,8 +16753,9 @@ async def get_salesforce_token():
 toolset = ToolboxToolset(
     server_url="...",
     auth_token_getters={
-        "salesforce-auth": get_salesforce_token,   # Async callable
-        "github-pat": lambda: "my-pat-token"       # Sync callable or static lambda
+        "salesforce-auth": get_salesforce_token,                # Async callable
+        "github-pat": lambda: "my-pat-token",                   # Sync callable or static lambda
+        "oauth-user": lambda ctx: ctx.state.get("auth_token")   # Dynamic context-aware callable
     }
 )
 ```
@@ -16136,6 +16793,29 @@ toolset = ToolboxToolset(
     }
 )
 ```
+
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics via the `toolbox-core` layer, following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp).
+
+First install the telemetry extra from `toolbox-core`:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+Then pass `telemetry_enabled=True` when creating your `ToolboxClient` or `ToolboxToolset`:
+
+```python
+from toolbox_adk import ToolboxToolset
+
+toolset = ToolboxToolset(
+    server_url="http://127.0.0.1:5000",
+    telemetry_enabled=True,
+)
+```
+
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.
 
 
 # Core
@@ -16239,25 +16919,17 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```py
 from toolbox_core import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
@@ -16537,7 +17209,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice info>}}
-The name used when registering the getter function with the SDK (e.g.,`"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g.,`"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{</notice>}}
 
 ```py
@@ -16681,6 +17353,63 @@ async def get_dynamic_value():
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
 
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp). When enabled, each `tools/list` and `tools/call` operation produces a client span and records an operation-duration histogram, and W3C `traceparent`/`tracestate` headers are propagated to the Toolbox server for distributed tracing.
+
+### Installation
+
+Install the `telemetry` extra to include the OpenTelemetry dependencies:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+### Usage
+
+Pass `telemetry_enabled=True` when creating a `ToolboxClient` or `ToolboxSyncClient`:
+
+```py
+from toolbox_core import ToolboxClient
+
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = await toolbox.load_tool("my-tool")
+    result = await tool(param="value")
+```
+
+### Configuring an OpenTelemetry Provider
+
+The SDK reads the globally configured `TracerProvider` and `MeterProvider`. Set these up in your application before creating the client:
+
+```py
+from opentelemetry import trace, metrics
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+# Configure tracing
+tracer_provider = TracerProvider()
+tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+trace.set_tracer_provider(tracer_provider)
+
+# Configure metrics
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
+meter_provider = MeterProvider(metric_readers=[metric_reader])
+metrics.set_meter_provider(meter_provider)
+
+# Now create the client with telemetry enabled
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    ...
+```
+
+{{< notice note >}}
+If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op implementation is used — no data is exported and there is zero overhead. The optional `[telemetry]` extra must be installed for `telemetry_enabled=True` to have any effect; if it is not installed the flag is silently ignored.
+{{< /notice >}}
+
+
 # LangChain/LangGraph
 MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 
@@ -16750,26 +17479,18 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```py
 from toolbox_langchain import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
@@ -17130,6 +17851,28 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics via the `toolbox-core` layer, following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp).
+
+First install the telemetry extra from `toolbox-core`:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+Then pass `telemetry_enabled=True` when creating your client:
+
+```py
+from toolbox_langchain import ToolboxClient
+
+with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = toolbox.load_tool("my-tool")
+    result = tool.invoke({"param": "value"})
+```
+
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.
+
 
 # LlamaIndex
 MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
@@ -17208,26 +17951,18 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```py
 from toolbox_llamaindex import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
@@ -17565,6 +18300,28 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics via the `toolbox-core` layer, following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp).
+
+First install the telemetry extra from `toolbox-core`:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+Then pass `telemetry_enabled=True` when creating your client:
+
+```py
+from toolbox_llamaindex import ToolboxClient
+
+with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = toolbox.load_tool("my-tool")
+    result = tool(param="value")
+```
+
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.
+
 
 # Javascript
 Javascript SDKs to connect to the MCP Toolbox server.
@@ -17720,16 +18477,12 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 ### Available Protocols
 
-{{< notice note >}}
-The native Toolbox protocol (`Protocol.TOOLBOX`) is deprecated and will be removed on March 4, 2026. Please use `Protocol.MCP` or specific MCP versions.
-{{< /notice >}}
-
+We currently support different versions of the MCP protocol.
 - `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20250618`).
 - `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 - `Protocol.MCP_v20250326`: March 2025 version.
 - `Protocol.MCP_v20250618`: June 2025 version.
 - `Protocol.MCP_v20251125`: November 2025 version.
-- `Protocol.TOOLBOX`: **Deprecated** Legacy Toolbox protocol.
 
 ### Specifying a Protocol
 
@@ -17907,7 +18660,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice note>}}
-The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```javascript
@@ -18195,16 +18948,13 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 ### Available Protocols
 
-{{ <notice note > }}
-The native Toolbox protocol (Protocol.TOOLBOX) is deprecated and will be removed on March 4, 2026. Please use Protocol.MCP or specific MCP versions.
-{{ < /notice >}}
+We currently support different versions of the MCP protocol.
 
 - `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20250618`).
 - `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 - `Protocol.MCP_v20250326`: March 2025 version.
 - `Protocol.MCP_v20250618`: June 2025 version.
 - `Protocol.MCP_v20251125`: November 2025 version.
-- `Protocol.TOOLBOX`: **Deprecated** Legacy Toolbox protocol.
 
 ### Specifying a Protocol
 
@@ -18380,7 +19130,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice note>}}
-The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```javascript
@@ -18780,25 +19530,19 @@ during initialization (e.g., `tbadk.NewToolboxClient(URL, core.WithHTTPClient(my
 
 ## Transport Protocols
 
-The SDK supports multiple transport protocols. By default, the client uses the latest supported version of the **Model Context Protocol (MCP)**.
+The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the `v2025-06-18` version of the **Model Context Protocol (MCP)**.
 
-You can explicitly select a protocol using the `core.WithProtocol` option during client initialization.
+You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to pin the client to a specific legacy version of MCP.
 
 {{< notice note >}}
-* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
-* **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+* MCP Transport options use **Model Context Protocol over HTTP**.
 {{< /notice >}}
 
 ### Supported Protocols
 
-{{< notice note >}}
-The native Toolbox protocol (`core.Toolbox`) is deprecated and will be removed on March 4, 2026. Please use `core.MCP` or specific MCP versions.
-{{< /notice >}}
-
 | Constant | Description |
 | :--- | :--- |
 | `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
-| `core.Toolbox` | **Deprecated** The native Toolbox HTTP protocol. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -18812,10 +19556,9 @@ import (
     "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
 )
 
-// Initialize with the native Toolbox protocol
+// Initialize with the default MCP protocol (2025-06-18)
 client, err := tbadk.NewToolboxClient(
     "http://localhost:5000",
-    core.WithProtocol(core.Toolbox),
 )
 
 // Initialize with the MCP Protocol 2025-03-26
@@ -19021,7 +19764,7 @@ authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 {{< notice info >}}
 The name used when registering the getter function with the SDK (e.g.,
 `"my_api_token"`) must exactly match the `name` of the corresponding
-`authServices` defined in the tool's configuration within the Toolbox service.
+`authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```go
@@ -19479,25 +20222,19 @@ Closing the `ToolboxClient` also closes the underlying network session shared by
 
 ## Transport Protocols
 
-The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the latest supported version of the **Model Context Protocol (MCP)**.
+The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the `v2025-06-18` version of the **Model Context Protocol (MCP)**.
 
-You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to use the native Toolbox HTTP protocol or pin the client to a specific legacy version of MCP.
+You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to pin the client to a specific legacy version of MCP.
 
 {{< notice note >}}
-* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
-* **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+* **MCP Transports**: These options use **Model Context Protocol over HTTP**.
 {{< /notice >}}
 
 ### Supported Protocols
 
-{{< notice note >}}
-The native Toolbox protocol (`core.Toolbox`) is deprecated and will be removed on March 4, 2026. Please use `core.MCP` or specific MCP versions.
-{{< /notice >}}
-
 | Constant | Description |
 | :--- | :--- |
 | `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
-| `core.Toolbox` |  **Deprecated** The native Toolbox HTTP protocol. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -19505,14 +20242,13 @@ The native Toolbox protocol (`core.Toolbox`) is deprecated and will be removed o
 
 ### Example
 
-If you wish to use the native Toolbox protocol:
+// Initialize with the default MCP protocol (2025-06-18)
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
 
 client, err := core.NewToolboxClient(
     "http://localhost:5000",
-    core.WithProtocol(core.Toolbox),
 )
 ```
 If you want to pin the MCP Version 2025-03-26:
@@ -19706,7 +20442,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice info >}}
-The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```go
@@ -20452,6 +21188,436 @@ func main() {
 
 </details>
 
+# Java
+Java SDKs to connect to the MCP Toolbox server.
+
+
+
+## Overview
+
+The MCP Toolbox service provides a centralized way to manage and expose tools
+(like API connectors, database query tools, etc.) for use by GenAI applications.
+
+These Java SDKs act as clients for that service. They handle the communication needed to:
+
+* Fetch tool definitions from your running MCP Toolbox instance.
+* Provide convenient Java objects or functions representing those tools.
+* Invoke the tools (calling the underlying APIs/services configured in MCP Toolbox).
+* Handle authentication and parameter binding as needed.
+
+By using these SDKs, you can easily leverage your MCP Toolbox-managed tools directly
+within your Java applications or AI orchestration frameworks.
+
+## Getting Started
+
+First make sure MCP Toolbox Server is set up and is running (either locally or deployed on Cloud Run). Follow the instructions here: [**MCP Toolbox Getting Started
+    Guide**](https://googleapis.github.io/genai-toolbox/getting-started/introduction/#getting-started)
+
+## Installation
+
+This SDK is distributed via a [Maven Central Repository](https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java).
+
+### Maven
+Add the dependency to your `pom.xml`:
+```xml
+<dependency>
+    <groupId>com.google.cloud.mcp</groupId>
+    <artifactId>mcp-toolbox-sdk-java</artifactId>
+    <!-- Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java -->
+    <version>VERSION</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+### Gradle
+
+```
+dependencies {
+    // Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java
+    implementation("com.google.cloud.mcp:mcp-toolbox-sdk-java:VERSION") 
+}
+```
+
+
+{{< notice note >}}
+Source code for [Java-sdk](https://github.com/googleapis/mcp-toolbox-sdk-java)
+{{< /notice >}}
+
+
+# Core
+MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
+
+
+## Overview
+
+The package provides a java interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.
+
+## Installation
+
+This SDK is distributed via a [Maven Central Repository](https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java).
+
+### Maven
+Add the dependency to your `pom.xml`:
+```xml
+<dependency>
+    <groupId>com.google.cloud.mcp</groupId>
+    <artifactId>mcp-toolbox-sdk-java</artifactId>
+    <!-- Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java -->
+    <version>VERSION</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+### Gradle
+
+```
+dependencies {
+    // Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java
+    implementation("com.google.cloud.mcp:mcp-toolbox-sdk-java:VERSION") 
+}
+```
+
+## Quickstart
+
+Here is the minimal code needed to connect to a MCP Toolbox and invoke a tool.
+
+```java
+import com.google.cloud.mcp.McpToolboxClient;
+import java.util.Map;
+
+public class App {
+    public static void main(String[] args) {
+        // 1. Create the Client
+        McpToolboxClient client = McpToolboxClient.builder()
+            .baseUrl("https://my-toolbox-service.a.run.app/mcp") 
+            .build();
+
+        // 2. Invoke a Tool
+        client.invokeTool("get-toy-price", Map.of("description", "plush dinosaur"))
+            .thenAccept(result -> {
+                // Pick the first item from the response.
+                System.out.println("Tool Output: " + result.content().get(0).text());
+            })
+            .exceptionally(ex -> {
+                System.err.println("Error: " + ex.getMessage());
+                return null;
+            })
+            .join(); // Wait for completion
+    }
+}
+```
+
+For a detailed example, check the [ExampleUsage.java file](https://github.com/googleapis/mcp-toolbox-sdk-java/blob/main/example/src/main/java/cloudcode/helloworld/ExampleUsage.java) in the example folder of [Java SDK Repo](https://github.com/googleapis/mcp-toolbox-sdk-java).
+
+{{< notice tip >}}
+The SDK is Async-First, using Java's `CompletableFuture` to bridge both patterns naturally.
+- Chain methods using `.thenCompose()`, `.thenAccept()`, and `.exceptionally()` for non-blocking execution.
+- If you prefer synchronous execution, simply call `.join()` on the result to block until completion.
+
+```java
+// Async (Non-blocking)
+client.invokeTool("tool-name", args).thenAccept(result -> ...);
+// Sync (Blocking)
+ToolResult result = client.invokeTool("tool-name", args).join();
+```
+{{< /notice >}}
+
+## Usage
+
+### Load the Client
+
+The `McpToolboxClient` is your entry point. It is thread-safe and designed to be instantiated once and reused.
+
+```java
+// Local Development
+McpToolboxClient client = McpToolboxClient.builder()
+    .baseUrl("http://localhost:5000/mcp")
+    .build();
+
+// Cloud Run Production
+McpToolboxClient client = McpToolboxClient.builder()
+    .baseUrl("https://my-toolbox-service.a.run.app/mcp")
+    // .apiKey("...") // Optional: Overrides automatic Google Auth
+    .build();
+```
+
+### Load a Toolset
+
+You can load all available tools or a specific subset (toolset) if your server supports it. This returns a Map of tool definitions.
+
+```java
+// Load all tools (alias for listTools)
+client.loadToolset().thenAccept(tools -> {
+    System.out.println("Available Tools: " + tools.keySet());
+    
+    tools.forEach((name, definition) -> {
+        System.out.println("Tool: " + name);
+        System.out.println("Description: " + definition.description());
+    });
+});
+```
+
+```java
+// Load a specific toolset (e.g., 'retail-tools')
+client.loadToolset("retail-tools").thenAccept(tools -> {
+    System.out.println("Tools in Retail Set: " + tools.keySet());
+});
+```
+
+### Load a Tool
+
+If you know the specific tool you want to use, you can load its definition directly. This is useful for validation or inspecting the required parameters before execution.
+
+```java
+client.loadTool("get-toy-price").thenAccept(toolDef -> {
+    System.out.println("Loaded Tool: " + toolDef.description());
+    System.out.println("Parameters: " + toolDef.parameters());
+});
+```
+
+
+### Invoke a Tool
+
+Invoking a tool sends a request to the MCP Server to execute the logic (SQL, API call, etc.). Arguments are passed as a `Map<String, Object>`.
+
+```java
+import java.util.Map;
+
+Map<String, Object> args = Map.of(
+    "description", "plush dinosaur",
+    "limit", 5
+);
+
+client.invokeTool("get-toy-price", args).thenAccept(result -> {
+    // Pick the first item from the response.
+    System.out.println("Result: " + result.content().get(0).text());
+});
+```
+
+## Authentication
+
+### Client to Server Authentication
+
+This section describes how to authenticate the `ToolboxClient` itself when connecting to a MCP Toolbox server instance that requires authentication. This is crucial for securing your MCP Toolbox server endpoint, especially when deployed on platforms like Cloud Run, GKE, or any environment where unauthenticated access is restricted.
+
+### When is Client-to-Server Authentication Needed
+
+You'll need this if your MCP Toolbox server is configured to deny unauthenticated requests. For example:
+
+* Your MCP Toolbox server is deployed on **Google Cloud Run** and configured to "Require authentication" (default).  
+* Your server is behind an Identity-Aware Proxy (IAP).  
+* You have custom authentication middleware.
+
+Without proper client authentication, attempts to connect (like `listTools`) will fail with `401 Unauthorized` or `403 Forbidden` errors.
+
+### How it works
+
+The Java SDK handles the generation of **Authorization headers** (Bearer tokens) using the **Google Auth Library**. It follows the **Application Default Credentials (ADC)** strategy to find the correct credentials based on the environment where your code is running.
+
+{{< notice note >}}
+To get started with local development, you'll need to set up [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment).
+{{< /notice >}}
+
+### Authenticating with Google Cloud Servers (Cloud Run)
+
+For MCP Toolbox servers hosted on Google Cloud (e.g., Cloud Run), the SDK provides seamless OIDC authentication.
+
+#### 1\. Configure Permissions
+
+Grant the **`roles/run.invoker`** IAM role on the Cloud Run service to the principal calling the service.
+
+* **Local Dev:** Grant this role to your *User Account Email*.  
+* **Production:** Grant this role to the *Service Account* attached to your application.
+
+#### 2\. Configure Credentials
+
+**Option A: Local Development** If running on your laptop, use the `gcloud` CLI to set up your user credentials.
+
+```
+gcloud auth application-default login
+```
+
+The SDK will automatically detect these credentials and generate an OIDC ID Token intended for your MCP Toolbox URL.
+
+**Option B: Google Cloud Environments** When running within Google Cloud (e.g., Compute Engine, GKE, another Cloud Run service, Cloud Functions), ADC is configured automatically. The SDK uses the environment's default service account. No extra code or configuration is required.
+
+**Option C: On-Premise / CI/CD** If running outside of Google Cloud (e.g., Jenkins, AWS), create a Service Account Key (JSON) and set the environment variable:
+
+```
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+```
+
+| Environment | Mechanism | Setup Required |
+| :---- | :---- | :---- |
+| **Local Dev** | Uses User Credentials | Run gcloud auth application-default login |
+| **Cloud Run** | Uses Service Account | **None.** (Automatic) |
+| **CI/CD** | Uses Service Account Key | Set GOOGLE\_APPLICATION\_CREDENTIALS=/path/to/key.json |
+
+{{< notice note >}}
+If you provide an `.apiKey()` in the builder, it overrides the automatic ADC mechanism.
+{{< /notice >}}
+
+### Authenticating the Tools
+
+Tools can be configured within the MCP Toolbox service to require authentication, ensuring only authorized users or applications can invoke them, especially when accessing sensitive data.
+
+{{< notice info >}}
+Always use HTTPS to connect your application with the MCP Toolbox service, especially in production environments or whenever the communication involves sensitive data (including scenarios where tools require authentication tokens). Using plain HTTP lacks encryption and exposes your application and data to significant security risks, such as eavesdropping and tampering.
+{{< /notice >}}
+
+### When is Authentication Needed?
+
+Authentication is configured per-tool within the MCP Toolbox service itself. If a tool you intend to use is marked as requiring authentication in the service, you must configure the SDK client to provide the necessary credentials (currently OAuth2 tokens) when invoking that specific tool.
+
+### Supported Authentication Mechanisms
+
+The MCP Toolbox service enables secure tool usage through Authenticated Parameters. For detailed information on how these mechanisms work within the MCP Toolbox service and how to configure them, please refer to [MCP Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters)
+
+### Step 1: Configure Tools in MCP Toolbox Service
+
+First, ensure the target tool(s) are configured correctly in the MCP Toolbox service to require authentication. Refer to the [MCP Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters) for instructions.
+
+### Step 2: Configure SDK Client
+
+Your application needs a way to obtain the required token for the authenticated user. The SDK requires you to provide a function capable of retrieving this token *when the tool is invoked*.
+
+### Provide a Token Retriever Function
+
+You must provide the SDK with an `AuthTokenGetter` (a function that returns a `CompletableFuture<String>`). This implementation depends on your application's authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
+
+{{< notice info >}}
+The **Service Name** (or Auth Source) used when adding the getter (e.g., `"salesforce_auth"`) must exactly match the name of the corresponding auth source defined in the tool's configuration.
+{{< /notice >}}
+
+```java
+import com.google.cloud.mcp.AuthTokenGetter;
+
+// Define your token retrieval logic
+AuthTokenGetter salesforceTokenGetter = () -> {
+    return CompletableFuture.supplyAsync(() -> fetchTokenFromVault()); 
+};
+//example tool: search-salesforce and related sample params
+client.loadTool("search-salesforce").thenCompose(tool -> {
+    // Register the getter. It will be called every time 'execute' is run.
+    tool.addAuthTokenGetter("salesforce_auth", salesforceTokenGetter);
+    
+    return tool.execute(Map.of("query", "recent leads"));
+});
+```
+
+{{< notice tip >}}
+Your token retriever function is invoked every time an authenticated parameter requires a token for a tool call. Consider implementing caching logic within this function to avoid redundant token fetching or generation, especially for tokens with longer validity periods or if the retrieval process is resource-intensive.
+{{< /notice >}}
+
+
+### Complete Authentication Example
+
+Here is a complete example of how to configure and invoke an authenticated tool.
+
+```java
+import com.google.cloud.mcp.McpToolboxClient;
+import com.google.cloud.mcp.AuthTokenGetter;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+public class AuthExample {
+    public static void main(String[] args) {
+        // 1. Define your token retrieval logic
+        AuthTokenGetter tokenGetter = () -> {
+            // Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+            return CompletableFuture.completedFuture("YOUR_ID_TOKEN"); 
+        };
+
+        // 2. Initialize the client
+        McpToolboxClient client = McpToolboxClient.builder()
+            .baseUrl("http://127.0.0.1:5000/mcp")
+            .build();
+
+        // 3. Load tool, attach auth, and execute
+        client.loadTool("my-tool")
+            .thenCompose(tool -> {
+                // "my_auth" must match the name in the tool's authService config
+                tool.addAuthTokenGetter("my_auth", tokenGetter);
+                
+                return tool.execute(Map.of("input", "some input"));
+            })
+            .thenAccept(result -> {
+                // Pick the first item from the response.
+                System.out.println(result.content().get(0).text());
+            })
+            .join();
+    }
+}
+```
+
+## Binding Parameter Values
+
+The SDK allows you to pre-set, or "bind", values for specific tool parameters before the tool is invoked or even passed to an LLM. These bound values are fixed and will not be requested or modified by the LLM during tool use.
+
+### Why Bind Parameters?
+
+* Protecting sensitive information: API keys, secrets, etc.  
+* Enforcing consistency: Ensuring specific values for certain parameters.  
+* Pre-filling known data: Providing defaults or context.
+
+{{< notice info >}}
+The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool's configuration within the MCP Toolbox service.
+{{< /notice >}}
+
+{{< notice tip >}}
+You do not need to modify the tool's configuration in the MCP Toolbox service to bind parameter values using the SDK.
+{{< /notice >}}
+
+### Option A: Static Binding
+
+Bind a fixed value to a tool object.
+
+```java
+client.loadTool("get-toy-price").thenCompose(tool -> {
+    // Bind 'currency' to 'USD' permanently for this tool instance
+    tool.bindParam("currency", "USD");
+    
+    // Now invoke without specifying currency
+    return tool.execute(Map.of("description", "lego set")); 
+});
+```
+
+### Option B: Dynamic Binding
+
+Instead of a static value, you can bind a parameter to a synchronous or asynchronous function (`Supplier`). This function will be called **each time** the tool is invoked to dynamically determine the parameter's value at runtime.
+
+```java
+client.loadTool("check-order-status").thenCompose(tool -> {
+    // Bind 'user_id' to a function that fetches the current user from context
+    tool.bindParam("user_id", () -> SecurityContext.getCurrentUser().getId());
+    
+    // Invoke: The SDK will call the supplier to fill 'user_id'
+    return tool.execute(Map.of("order_id", "12345"));
+});
+```
+
+{{< notice tip >}}
+You don't need to modify tool configurations to bind parameter values.
+{{< /notice >}}
+
+## Error Handling
+
+The SDK uses Java's `CompletableFuture` API. Errors (Network issues, `4xx`/`5xx` responses) are propagated as exceptions wrapped in `CompletionException`.
+
+```java
+
+client.invokeTool("invalid-tool", Map.of())
+    .handle((result, ex) -> {
+        if (ex != null) {
+            System.err.println("Invocation Failed: " + ex.getCause().getMessage());
+            return null; // Handle error
+        }
+        return result; // Success path
+    });
+
+```
+
+
 # Reference
 This section contains reference documentation.
 
@@ -20465,7 +21631,7 @@ This page describes the `toolbox` command-line options.
 | Flag (Short) | Flag (Long)                | Description                                                                                                                                                                      | Default     |
 |--------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                              | `127.0.0.1` |
-|              | `--disable-reload`         | Disables dynamic reloading of tools file.                                                                                                                                        |             |
+|              | `--disable-reload`         | Disables dynamic reloading of config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                                 |             |
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
@@ -20475,9 +21641,9 @@ This page describes the `toolbox` command-line options.
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
 |              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                        | `toolbox`   |
-|              | `--tools-file`             | File path specifying the tool configuration. Cannot be used with --tools-files or --tools-folder.                                                                                |             |
-|              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file or --tools-folder.                                                    |             |
-|              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file or --tools-files. |             |
+|              | `--config`             | File path specifying the tool configuration. Cannot be used with --configs or --config-folder.                                                                                |             |
+|              | `--configs`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --config or --config-folder.                                                    |             |
+|              | `--config-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config or --configs. |             |
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
@@ -20520,9 +21686,9 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 
 **Flags:**
 
-- `--name`: Name of the generated skill.
+- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
 - `--description`: Description of the generated skill.
-- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 - `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
@@ -20548,10 +21714,10 @@ For more detailed instructions, see [Generate Agent Skills](../how-to/generate_s
 
 ```bash
 # Basic server with custom port configuration
-./toolbox --tools-file "tools.yaml" --port 8080
+./toolbox --config "tools.yaml" --port 8080
 
 # Server with prebuilt + custom tools configurations
-./toolbox --tools-file tools.yaml --prebuilt alloydb-postgres
+./toolbox --config tools.yaml --prebuilt alloydb-postgres
 
 # Server with multiple prebuilt tools configurations
 ./toolbox --prebuilt alloydb-postgres,alloydb-postgres-admin
@@ -20565,15 +21731,15 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 **Single File:** (default)
 
-- `--tools-file`: Path to a single YAML configuration file (default: `tools.yaml`)
+- `--config`: Path to a single YAML configuration file (default: `tools.yaml`)
 
 **Multiple Files:**
 
-- `--tools-files`: Comma-separated list of YAML files to merge
+- `--configs`: Comma-separated list of YAML files to merge
 
 **Directory:**
 
-- `--tools-folder`: Directory containing YAML files to load and merge
+- `--config-folder`: Directory containing YAML files to load and merge
 
 **Prebuilt Configurations:**
 
@@ -20584,7 +21750,7 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 {{< notice tip >}}
 The CLI enforces mutual exclusivity between configuration source flags,
 preventing simultaneous use of the file-based options ensuring only one of
-`--tools-file`, `--tools-files`, or `--tools-folder` is
+`--config`, `--configs`, or `--config-folder` is
 used at a time.
 {{< /notice >}}
 
@@ -20622,8 +21788,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 {{< notice tip >}}
-You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
-`--tools-folder` to combine prebuilt configs with custom tools.
+You can now use `--prebuilt` along `--config`, `--configs`, or
+`--config-folder` to combine prebuilt configs with custom tools.
 
 You can also combine multiple prebuilt configs.
 
@@ -21159,7 +22325,7 @@ See [Usage Examples](../reference/cli.md#examples).
 ## Looker Dev
 
 *   `--prebuilt` value: `looker-dev`
-*   May be used in combination with Looker, `--prebuilt looker,looker-dev`
+*   Almost always used in combination with Looker, `--prebuilt looker,looker-dev`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
@@ -21195,6 +22361,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_lookml_tests`: Retrieves a list of available LookML tests for a project.
     *   `run_lookml_tests`: Executes specific LookML tests within a project.
     *   `create_view_from_table`: Generates boilerplate LookML views directly from the database schema.
+    *   `project_git_branch`: Fetch and manipulate the git branch of a LookML project.
 
 ## Looker Conversational Analytics
 
@@ -21480,5 +22647,27 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `search_dicom_series`: Searches for DICOM series.
     *   `search_dicom_instances`: Searches for DICOM instances.
     *   `retrieve_rendered_dicom_instance`: Retrieves a rendered DICOM instance.
+
+## Oracle
+
+*   `--prebuilt` value: `oracledb`
+*   **Environment Variables:**
+   
+    *   `ORACLE_CONNECTION_STRING`: The connection string for the Oracle server (e.g., "hostname:port/servicename").
+    *   `ORACLE_USERNAME`: The database username.
+    *   `ORACLE_PASSWORD`: The password for the database user.
+    *   `ORACLE_WALLET`: The path to the Oracle DB Wallet file for databases that support this authentication type.
+    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating whether to use the OCI-based driver. Setting to `true` is required for features like Oracle Wallet and requires the Oracle Instant Client libraries to be installed.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   For queries on DBA views like `dba_data_files` and `dba_free_space`, access typically requires elevated database privileges (like `SELECT_CATALOG_ROLE` or direct grants) that a standard user may not have.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+    *   `list_active_sessions`: Lists active database sessions.
+    *   `get_query_plan`: Generate a full execution plan for a single SQL statement.
+    *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
+    *   `list_tablespace_usage`: Lists tablespace usage.
+    *   `list_invalid_objects`: Lists invalid objects.
 
 

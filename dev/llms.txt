@@ -36,7 +36,8 @@ List of guides detailing how to do different things with Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
   - [Firestore using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
   - [Looker using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
-  - [MySQL using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [Neo4j using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/neo4j_mcp/): Connect your IDE to Neo4j using Toolbox.  - [PostgreSQL using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
+  - [MySQL using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [Neo4j using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/neo4j_mcp/): Connect your IDE to Neo4j using Toolbox.  - [Oracle using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/oracle_mcp/): Connect your IDE to Oracle DB using Toolbox.
+  - [PostgreSQL using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
   - [SQL Server using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/mssql_mcp/): Connect your IDE to SQL Server using Toolbox.  - [SQLite using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/sqlite_mcp/): Connect your IDE to SQLite using Toolbox.  - [Cloud SQL for PostgreSQL Admin using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/cloud_sql_pg_admin_mcp/): Create and manage Cloud SQL for PostgreSQL (Admin) using Toolbox.
   - [Cloud SQL for MySQL Admin using MCP](https://Deeven-Seru.github.io/genai-toolbox/dev/how-to/connect-ide/cloud_sql_mysql_admin_mcp/): Create and manage Cloud SQL for MySQL (Admin) using Toolbox.
@@ -174,22 +175,24 @@ Samples and guides for using Toolbox.
 ### About
 
 A list of other information related to Toolbox.
-- [FAQ](https://Deeven-Seru.github.io/genai-toolbox/dev/about/faq/): Frequently asked questions about Toolbox.
+- [FAQ](https://Deeven-Seru.github.io/genai-toolbox/dev/about/faq/): Frequently asked questions about Toolbox.- [Versioning Policy](https://Deeven-Seru.github.io/genai-toolbox/dev/about/versioning/): How MCP Toolbox manages versions and breaking changes.
 ### SDKs
 
 Client SDKs to connect to the MCP Toolbox server.
-- [Python](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python-sdk/): Python SDKs to connect to the MCP Toolbox server.
-  - [ADK](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python-sdk/adk/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your ADK apps.
-  - [Core](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python-sdk/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
-  - [LangChain/LangGraph](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python-sdk/langchain/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
-  - [LlamaIndex](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python-sdk/llamaindex/): MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
-- [Javascript](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js-sdk/): Javascript SDKs to connect to the MCP Toolbox server.
-  - [ADK](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js-sdk/adk/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your ADK apps.
-  - [Core](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js-sdk/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
-- [Go](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go-sdk/): Go SDKs to connect to the MCP Toolbox server.
-  - [ADK Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go-sdk/tbadk/): MCP Toolbox ADK for integrating functionalities of MCP Toolbox into your Agentic apps.
-  - [Core Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go-sdk/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
-  - [Genkit Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go-sdk/tbgenkit/): MCP Toolbox Genkit for integrating functionalities of MCP Toolbox into your Agentic apps.
+- [Python](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python/): Python SDKs to connect to the MCP Toolbox server.
+  - [ADK](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python/adk/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your ADK apps.
+  - [Core](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
+  - [LangChain/LangGraph](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python/langchain/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
+  - [LlamaIndex](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/python/llamaindex/): MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
+- [Javascript](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js/): Javascript SDKs to connect to the MCP Toolbox server.
+  - [ADK](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js/adk/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your ADK apps.
+  - [Core](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/js/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
+- [Go](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go/): Go SDKs to connect to the MCP Toolbox server.
+  - [ADK Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go/tbadk/): MCP Toolbox ADK for integrating functionalities of MCP Toolbox into your Agentic apps.
+  - [Core Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go/core/): MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
+  - [Genkit Package](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/go/tbgenkit/): MCP Toolbox Genkit for integrating functionalities of MCP Toolbox into your Agentic apps.
+- [Java](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/java/): Java SDKs to connect to the MCP Toolbox server.
+  - [Core](https://Deeven-Seru.github.io/genai-toolbox/dev/sdks/java/core/): MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 
 ### Reference
 
