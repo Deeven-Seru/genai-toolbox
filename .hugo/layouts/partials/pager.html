@@ -1,0 +1,103 @@
+{{ $curr := . }}
+{{ $next := "" }}
+{{ $prev := "" }}
+
+{{/* 1. Calculate PREVIOUS */}}
+{{ if .Parent }}
+  {{ $siblings := .Parent.Pages.ByWeight }}
+  {{ $currIndex := -1 }}
+
+  {{ range $index, $page := $siblings }}
+    {{ if eq $page.RelPermalink $curr.RelPermalink }}
+      {{ $currIndex = $index }}
+    {{ end }}
+  {{ end }}
+
+  {{ if gt $currIndex 0 }}
+    {{/* Preceding sibling (if it's a folder, this naturally points to its _index.md!) */}}
+    {{ $prev = index $siblings (sub $currIndex 1) }}
+  {{ else }}
+    {{/* First child, so Previous points up to the Parent folder */}}
+    {{ if ne .Parent.Type "home" }}
+      {{ $prev = .Parent }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+
+{{/* 2. Calculate NEXT */}}
+{{ if and .IsNode (gt (len .Pages) 0) }}
+  {{/* If it's a folder with children, Next dives into the first child */}}
+  {{ $next = index .Pages.ByWeight 0 }}
+{{ else }}
+  {{/* Leaf page, or empty folder */}}
+  {{ if .Parent }}
+    {{ $siblings := .Parent.Pages.ByWeight }}
+    {{ $currIndex := -1 }}
+
+    {{ range $index, $page := $siblings }}
+      {{ if eq $page.RelPermalink $curr.RelPermalink }}
+        {{ $currIndex = $index }}
+      {{ end }}
+    {{ end }}
+
+    {{ if lt $currIndex (sub (len $siblings) 1) }}
+      {{/* Next sibling in the same folder */}}
+      {{ $next = index $siblings (add $currIndex 1) }}
+    {{ else }}
+      {{/* Last item in folder, step out and find the Parent's next sibling */}}
+      {{ $p := .Parent }}
+      {{ $foundNext := false }}
+
+      {{/* Check up to 3 directory levels up to find the next section */}}
+      {{ range seq 3 }}
+        {{ if and (not $foundNext) $p }}
+          {{ if $p.Parent }}
+            {{ $pSiblings := $p.Parent.Pages.ByWeight }}
+            {{ $pIndex := -1 }}
+            {{ range $index, $page := $pSiblings }}
+              {{ if eq $page.RelPermalink $p.RelPermalink }}
+                {{ $pIndex = $index }}
+              {{ end }}
+            {{ end }}
+
+            {{ if and (ge $pIndex 0) (lt $pIndex (sub (len $pSiblings) 1)) }}
+              {{ $next = index $pSiblings (add $pIndex 1) }}
+              {{ $foundNext = true }}
+            {{ else }}
+              {{ $p = $p.Parent }}
+            {{ end }}
+          {{ else }}
+            {{ $p = false }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+<!-- 3. Render the Buttons -->
+{{ if or $prev $next }}
+<nav class="mt-5 pt-4 border-top d-flex justify-content-between" aria-label="Page navigation">
+
+  <div>
+    {{ with $prev }}
+    <a href="{{ .RelPermalink }}" class="text-decoration-none">
+      <small class="text-muted d-block mb-1">&laquo; Previous</small>
+      <span class="text-body">{{ .Title }}</span>
+    </a>
+    {{ end }}
+  </div>
+
+  <div class="text-end">
+    {{ with $next }}
+    <a href="{{ .RelPermalink }}" class="text-decoration-none">
+      <small class="text-muted d-block mb-1">Next &raquo;</small>
+      <span class="text-body">{{ .Title }}</span>
+    </a>
+    {{ end }}
+  </div>
+
+</nav>
+{{ end }}
