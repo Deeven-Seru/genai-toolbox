@@ -37,7 +37,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
-  disableMigrationBanner = true
   releases_url = "/genai-toolbox/releases.releases"
   global_logo_url = "/genai-toolbox/"
   version = "dev"
@@ -61,6 +60,10 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 # Add a new version block here before every release
 # The order of versions in this file is mirrored into the dropdown
+
+[[params.versions]]
+  version = "v0.31.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.31.0/"
 
 [[params.versions]]
   version = "v0.30.0"
