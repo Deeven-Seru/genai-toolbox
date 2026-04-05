@@ -130,7 +130,8 @@ const configArgs = [{{.ConfigArgs}}];
 
 function getToolboxPath() {
     if (process.env.GEMINI_CLI === '1') {
-        const localPath = path.resolve(__dirname, '../../../toolbox');
+        const ext = process.platform === 'win32' ? '.exe' : '';
+        const localPath = path.resolve(__dirname, '../../../toolbox' + ext);
         if (fs.existsSync(localPath)) {
             return localPath;
         }
@@ -209,7 +210,7 @@ type scriptData struct {
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
-// (using a generated tools file) and arguments to execute the specific tool.
+// (using a generated config) and arguments to execute the specific tool.
 func generateScriptContent(name string, configArgs string, licenseHeader string) (string, error) {
 	data := scriptData{
 		Name:          name,

@@ -191,7 +191,8 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -1092,8 +1093,9 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 				t.Fatalf("error unmarshalling batch from wrapped result: %s", err)
 			}
 
-			if !cmp.Equal(&batch, tc.want, protocmp.Transform()) {
-				diff := cmp.Diff(&batch, tc.want, protocmp.Transform())
+			ignoreFields := protocmp.IgnoreFields(&dataprocpb.RuntimeInfo{}, "approximate_usage")
+			if !cmp.Equal(&batch, tc.want, protocmp.Transform(), ignoreFields) {
+				diff := cmp.Diff(&batch, tc.want, protocmp.Transform(), ignoreFields)
 				t.Errorf("GetBatch() returned diff (-got +want):\n%s", diff)
 			}
 		})

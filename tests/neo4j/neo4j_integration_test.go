@@ -71,7 +71,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to the command.
 	// This configuration defines the data source and the tools to be tested.
@@ -154,19 +154,19 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 					"description": "Simple tool to test end to end functionality.",
 					"parameters": []any{
 						map[string]any{
-							"name":        "cypher",
-							"type":        "string",
-							"required":    true,
-							"description": "The cypher to execute.",
-							"authSources": []any{},
+							"name":         "cypher",
+							"type":         "string",
+							"required":     true,
+							"description":  "The cypher to execute.",
+							"authServices": []any{},
 						},
 						map[string]any{
-							"name":        "dry_run",
-							"type":        "boolean",
-							"required":    false,
-							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
-							"default":     false,
-							"authSources": []any{},
+							"name":         "dry_run",
+							"type":         "boolean",
+							"required":     false,
+							"description":  "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
+							"default":      false,
+							"authServices": []any{},
 						},
 					},
 					"authRequired": []any{},

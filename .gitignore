@@ -13,6 +13,7 @@ node_modules
 # hugo
 .hugo/public/
 .hugo/resources/_gen
+.hugo/static/pagefind/
 .hugo_build.lock
 
 # coverage
@@ -24,3 +25,4 @@ __pycache__/
 # executable
 genai-toolbox
 toolbox
+toolbox.exe
