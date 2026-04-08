@@ -534,13 +534,13 @@ tools:
 			desc:   "invalid source",
 			in:     `sources: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid v1 config at key "sources": expected map; if you intended v2 format, each doc needs kind + name`,
+			errStr: `doc 1: invalid v1 config at key "sources": expected map`,
 		},
 		{
 			desc:   "invalid toolset",
 			in:     `toolsets: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid v1 config at key "toolsets": expected map; if you intended v2 format, each doc needs kind + name`,
+			errStr: `doc 1: invalid v1 config at key "toolsets": expected map`,
 		},
 	}
 	for _, tc := range tcs {
