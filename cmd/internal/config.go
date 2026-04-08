@@ -165,7 +165,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					}
 					transformed, err := transformDocs(key, slice)
 					if err != nil {
-						return nil, fmt.Errorf("doc %d: invalid v1 config at key %q: %w; if you intended v2 format, each doc needs kind + name", docIndex, key, err)
+						return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
 					}
 					// encode per-doc
 					for _, doc := range transformed {
@@ -181,7 +181,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 						}
 						break
 					}
-					return nil, fmt.Errorf("doc %d: invalid v1 config at key %q: expected map; if you intended v2 format, each doc needs kind + name", docIndex, key)
+					return nil, fmt.Errorf("doc %d: invalid v1 config at key %q: expected map", docIndex, key)
 				}
 			} else {
 				// this doc is already v2, encode to buf
