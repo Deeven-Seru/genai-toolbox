@@ -181,7 +181,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 						}
 						break
 					}
-					return nil, fmt.Errorf("doc %d: invalid v1 config at key %q: expected map", docIndex, key)
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected map", docIndex, key)
 				}
 			} else {
 				// this doc is already v2, encode to buf
