@@ -29,6 +29,7 @@ description: >
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
+|              | `--allow-partial-sources`  | Skip startup connectivity checks for sources to allow partial availability.                                                                                                      |             |
 |              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                        | `0`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 

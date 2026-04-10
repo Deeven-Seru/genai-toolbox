@@ -59,10 +59,66 @@ type SourceConfig interface {
 	Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)
 }
 
+// StartupCheckConfig is an optional interface for controlling connectivity checks on startup.
+type StartupCheckConfig interface {
+	CheckAtStartup() bool
+}
+
+type startupCheckWrapper struct {
+	SourceConfig
+	checkAtStartup bool
+}
+
+func (w startupCheckWrapper) CheckAtStartup() bool {
+	return w.checkAtStartup
+}
+
+// WrapSourceConfigWithStartupCheck wraps a SourceConfig to provide a startup check override.
+func WrapSourceConfigWithStartupCheck(cfg SourceConfig, checkAtStartup bool) SourceConfig {
+	if checkAtStartup {
+		return cfg
+	}
+	return startupCheckWrapper{SourceConfig: cfg, checkAtStartup: checkAtStartup}
+}
+
+// CheckAtStartup returns whether the config should perform connectivity checks at startup.
+func CheckAtStartup(cfg SourceConfig) bool {
+	if cfgWithCheck, ok := cfg.(StartupCheckConfig); ok {
+		return cfgWithCheck.CheckAtStartup()
+	}
+	return true
+}
+
 // Source is the interface for the source itself.
 type Source interface {
 	SourceType() string
 	ToConfig() SourceConfig
+}
+
+type startupCheckKey struct{}
+
+// WithStartupCheck returns a context that controls whether startup checks run for a source.
+func WithStartupCheck(ctx context.Context, checkAtStartup bool) context.Context {
+	return context.WithValue(ctx, startupCheckKey{}, checkAtStartup)
+}
+
+// ShouldCheckAtStartup indicates whether connectivity checks should run for a source init.
+func ShouldCheckAtStartup(ctx context.Context) bool {
+	if ctx == nil {
+		return true
+	}
+	if val, ok := ctx.Value(startupCheckKey{}).(bool); ok {
+		return val
+	}
+	return true
+}
+
+// CheckConnectivity runs the provided check function only when startup checks are enabled.
+func CheckConnectivity(ctx context.Context, checkFn func(context.Context) error) error {
+	if !ShouldCheckAtStartup(ctx) {
+		return nil
+	}
+	return checkFn(ctx)
 }
 
 // InitConnectionSpan adds a span for database pool connection initialization

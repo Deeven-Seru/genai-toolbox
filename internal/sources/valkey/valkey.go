@@ -99,10 +99,12 @@ func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	}
 
 	// Ping the server to check connectivity
-	pingCmd := client.B().Ping().Build()
-	_, err = client.Do(ctx, pingCmd).ToString()
-	if err != nil {
-		log.Fatalf("Failed to execute PING command: %v", err)
+	if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+		pingCmd := client.B().Ping().Build()
+		_, err := client.Do(ctx, pingCmd).ToString()
+		return err
+	}); err != nil {
+		return nil, fmt.Errorf("failed to execute PING command: %w", err)
 	}
 	return client, nil
 }

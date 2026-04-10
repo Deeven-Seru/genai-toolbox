@@ -26,10 +26,15 @@ instance: my-instance-name
 database: my_db
 user: ${USER_NAME}
 password: ${PASSWORD}
+# Optional: skip startup connectivity checks for this source
+checkAtStartup: false
 ```
 
 In implementation, each source is a different connection pool or client that used
 to connect to the database and execute the tool.
+
+By default, toolbox validates source connectivity at startup. Set `checkAtStartup: false`
+to allow a specific source to be offline without blocking startup.
 
 ## Available Sources
 

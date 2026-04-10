@@ -65,8 +65,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	// Verify the connection
-	err = client.Ping(ctx, nil)
-	if err != nil {
+	if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+		return client.Ping(ctx, nil)
+	}); err != nil {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 

@@ -106,8 +106,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to create Oracle connection: %w", err)
 	}
 
-	err = db.PingContext(ctx)
-	if err != nil {
+	if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+		return db.PingContext(ctx)
+	}); err != nil {
 		return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
 	}
 

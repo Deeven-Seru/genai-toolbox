@@ -62,8 +62,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}
 
-	err = db.PingContext(context.Background())
-	if err != nil {
+	if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+		return db.PingContext(ctx)
+	}); err != nil {
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 

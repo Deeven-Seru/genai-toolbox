@@ -2297,3 +2297,83 @@ tools:
 		})
 	}
 }
+
+func TestParseToolFileCheckAtStartup(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	testCases := []struct {
+		name string
+		in   []byte
+		want bool
+	}{
+		{
+			name: "explicit false",
+			in: testutils.FormatYaml(`
+		kind: sources
+		name: http-source
+		type: http
+		baseUrl: https://example.com
+		checkAtStartup: false
+		`),
+			want: false,
+		},
+		{
+			name: "explicit true",
+			in: testutils.FormatYaml(`
+		kind: sources
+		name: http-source
+		type: http
+		baseUrl: https://example.com
+		checkAtStartup: true
+		`),
+			want: true,
+		},
+		{
+			name: "default true",
+			in: testutils.FormatYaml(`
+		kind: sources
+		name: http-source-default
+		type: http
+		baseUrl: https://example.com
+		`),
+			want: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(ctx, tc.in)
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			cfg := toolsFile.Sources["http-source"]
+			if cfg == nil {
+				cfg = toolsFile.Sources["http-source-default"]
+			}
+			if cfg == nil {
+				t.Fatalf("expected source to be parsed")
+			}
+			if sources.CheckAtStartup(cfg) != tc.want {
+				t.Fatalf("expected checkAtStartup=%v", tc.want)
+			}
+		})
+	}
+
+	invalidInput := testutils.FormatYaml(`
+	kind: sources
+	name: http-source-invalid
+	type: http
+	baseUrl: https://example.com
+	checkAtStartup: "nope"
+	`)
+	_, err = parseToolsFile(ctx, invalidInput)
+	if err == nil {
+		t.Fatalf("expected error for invalid checkAtStartup type")
+	}
+	if !strings.Contains(err.Error(), "checkAtStartup must be a boolean") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}

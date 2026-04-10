@@ -396,7 +396,9 @@ func initCockroachDBConnectionPoolWithRetry(ctx context.Context, tracer trace.Tr
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		pool, err = pgxpool.New(ctx, connURL.String())
 		if err == nil {
-			err = pool.Ping(ctx)
+			err = sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+				return pool.Ping(ctx)
+			})
 		}
 
 		if err == nil {

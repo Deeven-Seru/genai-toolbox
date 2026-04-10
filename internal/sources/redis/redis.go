@@ -106,7 +106,6 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 	}
 
 	var client RedisClient
-	var err error
 	if r.ClusterEnabled {
 		// Create a new Redis Cluster client
 		clusterClient := redis.NewClusterClient(&redis.ClusterOptions{
@@ -120,11 +119,12 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 			Password:                   r.Password,
 			TLSConfig:                  tlsConfig,
 		})
-		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
-			return shard.Ping(ctx).Err()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("unable to connect to redis cluster: %s", err)
+		if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+			return clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
+				return shard.Ping(ctx).Err()
+			})
+		}); err != nil {
+			return nil, fmt.Errorf("unable to connect to redis cluster: %w", err)
 		}
 		client = clusterClient
 		return client, nil
@@ -142,9 +142,11 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		Password:                   r.Password,
 		TLSConfig:                  tlsConfig,
 	})
-	_, err = standaloneClient.Ping(ctx).Result()
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect to redis: %s", err)
+	if err := sources.CheckConnectivity(ctx, func(ctx context.Context) error {
+		_, err := standaloneClient.Ping(ctx).Result()
+		return err
+	}); err != nil {
+		return nil, fmt.Errorf("unable to connect to redis: %w", err)
 	}
 	client = standaloneClient
 	return client, nil

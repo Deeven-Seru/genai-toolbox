@@ -88,7 +88,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
+	if cfg.AllowPartialSources {
+		l.WarnContext(ctx, "Skipping startup connectivity checks for all sources (allow-partial-sources enabled).")
+	}
 	for name, sc := range cfg.SourceConfigs {
+		checkAtStartup := sources.CheckAtStartup(sc)
+		if cfg.AllowPartialSources {
+			checkAtStartup = false
+		}
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
@@ -97,6 +104,10 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
+			if !checkAtStartup && !cfg.AllowPartialSources {
+				l.InfoContext(childCtx, fmt.Sprintf("Skipping startup connectivity check for source %q", name))
+			}
+			childCtx = sources.WithStartupCheck(childCtx, checkAtStartup)
 			s, err := sc.Initialize(childCtx, instrumentation.Tracer)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)

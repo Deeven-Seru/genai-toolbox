@@ -42,6 +42,8 @@ type ServerConfig struct {
 	Port int
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
+	// AllowPartialSources allows startup when some sources are unavailable by skipping connectivity checks.
+	AllowPartialSources bool
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
 	AuthServiceConfigs AuthServiceConfigs
 	// EmbeddingModelConfigs defines a models used to embed parameters.
@@ -244,6 +246,17 @@ func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]an
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
+
+	checkAtStartup := true
+	if raw, ok := r["checkAtStartup"]; ok {
+		val, ok := raw.(bool)
+		if !ok {
+			return nil, fmt.Errorf("checkAtStartup must be a boolean for source %q", name)
+		}
+		checkAtStartup = val
+		delete(r, "checkAtStartup")
+	}
+
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
@@ -251,6 +264,9 @@ func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]an
 	sourceConfig, err := sources.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
 		return nil, err
+	}
+	if !checkAtStartup {
+		sourceConfig = sources.WrapSourceConfigWithStartupCheck(sourceConfig, checkAtStartup)
 	}
 	return sourceConfig, nil
 }
