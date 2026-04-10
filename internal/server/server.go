@@ -88,6 +88,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the sources from configs
 	sourcesMap := make(map[string]sources.Source)
+	var sourceInitErrors []string
 	for name, sc := range cfg.SourceConfigs {
 		s, err := func() (sources.Source, error) {
 			childCtx, span := instrumentation.Tracer.Start(
@@ -104,9 +105,17 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return s, nil
 		}()
 		if err != nil {
+			if cfg.AllowPartialStartup {
+				sourceInitErrors = append(sourceInitErrors, err.Error())
+				continue
+			}
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		sourcesMap[name] = s
+	}
+	if cfg.AllowPartialStartup && len(sourceInitErrors) > 0 {
+		slices.Sort(sourceInitErrors)
+		l.WarnContext(ctx, fmt.Sprintf("Initialized %d sources with %d failures:\n- %s", len(sourcesMap), len(sourceInitErrors), strings.Join(sourceInitErrors, "\n- ")))
 	}
 	sourceNames := make([]string, 0, len(sourcesMap))
 	for name := range sourcesMap {
@@ -172,6 +181,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
+	var toolInitErrors []string
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
 			_, span := instrumentation.Tracer.Start(
@@ -188,9 +198,17 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, nil
 		}()
 		if err != nil {
+			if cfg.AllowPartialStartup {
+				toolInitErrors = append(toolInitErrors, err.Error())
+				continue
+			}
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsMap[name] = t
+	}
+	if cfg.AllowPartialStartup && len(toolInitErrors) > 0 {
+		slices.Sort(toolInitErrors)
+		l.WarnContext(ctx, fmt.Sprintf("Initialized %d tools with %d failures:\n- %s", len(toolsMap), len(toolInitErrors), strings.Join(toolInitErrors, "\n- ")))
 	}
 	toolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {
@@ -210,6 +228,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
+	var toolsetInitErrors []string
 	for name, tc := range cfg.ToolsetConfigs {
 		t, err := func() (tools.Toolset, error) {
 			_, span := instrumentation.Tracer.Start(
@@ -218,16 +237,27 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("toolset.name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(cfg.Version, toolsMap)
+			t, missing, err := tc.Initialize(cfg.Version, toolsMap, cfg.AllowPartialStartup)
+			if len(missing) > 0 {
+				toolsetInitErrors = append(toolsetInitErrors, fmt.Sprintf("in toolset %q: missing tools %v", name, missing))
+			}
 			if err != nil {
 				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
 			}
 			return t, err
 		}()
 		if err != nil {
+			if cfg.AllowPartialStartup {
+				toolsetInitErrors = append(toolsetInitErrors, err.Error())
+				continue
+			}
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsetsMap[name] = t
+	}
+	if cfg.AllowPartialStartup && len(toolsetInitErrors) > 0 {
+		slices.Sort(toolsetInitErrors)
+		l.WarnContext(ctx, fmt.Sprintf("Initialized %d toolsets with %d failures:\n- %s", len(toolsetsMap), len(toolsetInitErrors), strings.Join(toolsetInitErrors, "\n- ")))
 	}
 	toolsetNames := make([]string, 0, len(toolsetsMap))
 	for name := range toolsetsMap {
@@ -241,6 +271,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
+	var promptInitErrors []string
 	for name, pc := range cfg.PromptConfigs {
 		p, err := func() (prompts.Prompt, error) {
 			_, span := instrumentation.Tracer.Start(
@@ -257,9 +288,17 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, nil
 		}()
 		if err != nil {
+			if cfg.AllowPartialStartup {
+				promptInitErrors = append(promptInitErrors, err.Error())
+				continue
+			}
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsMap[name] = p
+	}
+	if cfg.AllowPartialStartup && len(promptInitErrors) > 0 {
+		slices.Sort(promptInitErrors)
+		l.WarnContext(ctx, fmt.Sprintf("Initialized %d prompts with %d failures:\n- %s", len(promptsMap), len(promptInitErrors), strings.Join(promptInitErrors, "\n- ")))
 	}
 	promptNames := make([]string, 0, len(promptsMap))
 	for name := range promptsMap {
@@ -279,6 +318,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the promptsets from configs
 	promptsetsMap := make(map[string]prompts.Promptset)
+	var promptsetInitErrors []string
 	for name, pc := range cfg.PromptsetConfigs {
 		p, err := func() (prompts.Promptset, error) {
 			_, span := instrumentation.Tracer.Start(
@@ -287,16 +327,27 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("prompset_name", name)),
 			)
 			defer span.End()
-			p, err := pc.Initialize(cfg.Version, promptsMap)
+			p, missing, err := pc.Initialize(cfg.Version, promptsMap, cfg.AllowPartialStartup)
+			if len(missing) > 0 {
+				promptsetInitErrors = append(promptsetInitErrors, fmt.Sprintf("in promptset %q: missing prompts %v", name, missing))
+			}
 			if err != nil {
 				return prompts.Promptset{}, fmt.Errorf("unable to initialize promptset %q: %w", name, err)
 			}
 			return p, err
 		}()
 		if err != nil {
+			if cfg.AllowPartialStartup {
+				promptsetInitErrors = append(promptsetInitErrors, err.Error())
+				continue
+			}
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsetsMap[name] = p
+	}
+	if cfg.AllowPartialStartup && len(promptsetInitErrors) > 0 {
+		slices.Sort(promptsetInitErrors)
+		l.WarnContext(ctx, fmt.Sprintf("Initialized %d promptsets with %d failures:\n- %s", len(promptsetsMap), len(promptsetInitErrors), strings.Join(promptsetInitErrors, "\n- ")))
 	}
 	promptsetNames := make([]string, 0, len(promptsetsMap))
 	for name := range promptsetsMap {

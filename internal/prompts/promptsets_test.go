@@ -197,7 +197,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.config.Initialize(serverVersion, promptsMap)
+			got, _, err := tc.config.Initialize(serverVersion, promptsMap, false)
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -220,5 +220,32 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestPromptsetConfig_Initialize_Partial verifies allowPartial=true skips missing
+// prompts and surfaces them in the returned missing slice.
+func TestPromptsetConfig_Initialize_Partial(t *testing.T) {
+	t.Parallel()
+
+	promptsMap := map[string]prompts.Prompt{
+		"prompt1": newMockPrompt("prompt1", "First test prompt"),
+	}
+	serverVersion := "v1.0.0"
+
+	cfg := prompts.PromptsetConfig{
+		Name:        "partial-set",
+		PromptNames: []string{"prompt1", "ghost-prompt"},
+	}
+
+	got, missing, err := cfg.Initialize(serverVersion, promptsMap, true)
+	if err != nil {
+		t.Fatalf("Initialize() with allowPartial=true returned unexpected error: %v", err)
+	}
+	if len(missing) != 1 || missing[0] != "ghost-prompt" {
+		t.Errorf("missing slice = %v, want [ghost-prompt]", missing)
+	}
+	if len(got.Prompts) != 1 {
+		t.Errorf("got %d prompts, want 1 (only the valid one)", len(got.Prompts))
 	}
 }

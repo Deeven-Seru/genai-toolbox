@@ -40,30 +40,35 @@ type ToolsetManifest struct {
 	ToolsManifest map[string]Manifest `json:"tools"`
 }
 
-func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {
+func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool, allowPartial bool) (Toolset, []string, error) {
 	// finish toolset setup
 	// Check each declared tool name exists
 	var toolset Toolset
 	toolset.Name = t.Name
 	if !IsValidName(toolset.Name) {
-		return toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
+		return toolset, nil, fmt.Errorf("invalid toolset name: %s", toolset.Name)
 	}
 	toolset.Tools = make([]*Tool, 0, len(t.ToolNames))
 	toolset.Manifest = ToolsetManifest{
 		ServerVersion: serverVersion,
 		ToolsManifest: make(map[string]Manifest),
 	}
+	var missing []string
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
-			return toolset, fmt.Errorf("tool does not exist: %s", toolName)
+			if allowPartial {
+				missing = append(missing, toolName)
+				continue
+			}
+			return toolset, nil, fmt.Errorf("tool does not exist: %s", toolName)
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
 		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
 		toolset.McpManifest = append(toolset.McpManifest, tool.McpManifest())
 	}
 
-	return toolset, nil
+	return toolset, missing, nil
 }
 
 var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)

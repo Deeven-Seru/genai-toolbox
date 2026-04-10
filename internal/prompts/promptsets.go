@@ -41,12 +41,12 @@ type PromptsetManifest struct {
 	PromptsManifest map[string]Manifest `json:"prompts"`
 }
 
-func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]Prompt) (Promptset, error) {
+func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]Prompt, allowPartial bool) (Promptset, []string, error) {
 	// Check each declared prompt name exists
 	var promptset Promptset
 	promptset.Name = t.Name
 	if !tools.IsValidName(promptset.Name) {
-		return promptset, fmt.Errorf("invalid promptset name: %s", promptset.Name)
+		return promptset, nil, fmt.Errorf("invalid promptset name: %s", promptset.Name)
 	}
 	promptset.Prompts = make([]*Prompt, 0, len(t.PromptNames))
 	promptset.McpManifest = make([]McpManifest, 0, len(t.PromptNames))
@@ -54,15 +54,20 @@ func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 		ServerVersion:   serverVersion,
 		PromptsManifest: make(map[string]Manifest, len(t.PromptNames)),
 	}
+	var missing []string
 	for _, promptName := range t.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
-			return promptset, fmt.Errorf("prompt does not exist: %s", promptName)
+			if allowPartial {
+				missing = append(missing, promptName)
+				continue
+			}
+			return promptset, nil, fmt.Errorf("prompt does not exist: %s", promptName)
 		}
 		promptset.Prompts = append(promptset.Prompts, &prompt)
 		promptset.Manifest.PromptsManifest[promptName] = prompt.Manifest()
 		promptset.McpManifest = append(promptset.McpManifest, prompt.McpManifest())
 	}
 
-	return promptset, nil
+	return promptset, missing, nil
 }

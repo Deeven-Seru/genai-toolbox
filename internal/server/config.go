@@ -68,6 +68,8 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
+	// AllowPartialStartup indicates whether initialization should continue when some components fail.
+	AllowPartialStartup bool
 	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
 	// EnableAPI indicates if the /api endpoint is enabled.
