@@ -240,7 +240,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with maximum bytes billed example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -302,13 +302,13 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "negative maximum bytes billed",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
 			maximumBytesBilled: -1
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
 		},
 	}
 	for _, tc := range tcs {
