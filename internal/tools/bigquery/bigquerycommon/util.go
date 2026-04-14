@@ -66,8 +66,10 @@ func BQTypeStringFromToolType(toolType string) (string, error) {
 		return "INT64", nil
 	case "float":
 		return "FLOAT64", nil
-	case "boolean":
+	case parameters.TypeBool:
 		return "BOOL", nil
+	case parameters.TypeMap:
+		return "STRUCT", nil
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}

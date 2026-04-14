@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strconv"
-	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -179,7 +179,8 @@ func buildQueryParameters(paramsMetadata parameters.Parameters, paramsMap map[st
 
 		// Determine if the parameter is named or positional for the high-level client.
 		var paramNameForHighLevel string
-		if strings.Contains(statement, "@"+name) {
+		isNamed, _ := regexp.MatchString("@"+name+"\\b", statement)
+		if isNamed {
 			paramNameForHighLevel = name
 		}
 
@@ -215,6 +216,8 @@ func buildQueryParameters(paramsMetadata parameters.Parameters, paramsMap map[st
 						finalValue = []any(nil)
 					}
 				}
+			case parameters.TypeMap:
+				finalValue = map[string]any(nil)
 			}
 		}
 
