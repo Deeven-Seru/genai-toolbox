@@ -116,96 +116,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
-	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
-
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract template params", err)
 	}
 
-	for _, p := range t.Parameters {
-		name := p.GetName()
-		value := paramsMap[name]
-
-		// This block for converting []any to typed slices is still necessary and correct.
-		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
-			arrayParamValue, ok := value.([]any)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("unable to convert parameter `%s` to []any", name), nil)
-			}
-			itemType := arrayParam.GetItems().GetType()
-			var err error
-			value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
-			if err != nil {
-				return nil, util.NewAgentError(fmt.Sprintf("unable to convert parameter `%s` from []any to typed slice", name), err)
-			}
-		}
-
-		// Determine if the parameter is named or positional for the high-level client.
-		var paramNameForHighLevel string
-		if strings.Contains(newStatement, "@"+name) {
-			paramNameForHighLevel = name
-		}
-
-		// 1. Create the high-level parameter for the final query execution.
-		highLevelParams = append(highLevelParams, bigqueryapi.QueryParameter{
-			Name:  paramNameForHighLevel,
-			Value: value,
-		})
-
-		// 2. Create the low-level parameter for the dry run.
-		lowLevelParam := &bigqueryrestapi.QueryParameter{
-			Name:           paramNameForHighLevel,
-			ParameterType:  &bigqueryrestapi.QueryParameterType{},
-			ParameterValue: &bigqueryrestapi.QueryParameterValue{},
-		}
-
-		rv := reflect.ValueOf(value)
-		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 {
-			lowLevelParam.ParameterType.Type = "ARRAY"
-
-			// Default item type to FLOAT64 for embeddings, or use config if available.
-			itemType := "FLOAT64"
-			if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
-				if bqType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType()); err == nil {
-					itemType = bqType
-				}
-			}
-			lowLevelParam.ParameterType.ArrayType = &bigqueryrestapi.QueryParameterType{Type: itemType}
-
-			// Build the array values.
-			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				val := rv.Index(i).Interface()
-
-				// Prevent precision loss and scientific notation issues
-				var valStr string
-				switch v := val.(type) {
-				case float64:
-					valStr = strconv.FormatFloat(v, 'f', -1, 64)
-				case float32:
-					valStr = strconv.FormatFloat(float64(v), 'f', -1, 32)
-				default:
-					valStr = fmt.Sprintf("%v", val)
-				}
-
-				arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
-					Value: valStr,
-				}
-			}
-			lowLevelParam.ParameterValue.ArrayValues = arrayValues
-		} else {
-			// Handle scalar types based on their defined type.
-			bqType, err := bqutil.BQTypeStringFromToolType(p.GetType())
-			if err != nil {
-				return nil, util.NewAgentError("unable to get BigQuery type from tool parameter type", err)
-			}
-			lowLevelParam.ParameterType.Type = bqType
-			lowLevelParam.ParameterValue.Value = fmt.Sprintf("%v", value)
-		}
-		lowLevelParams = append(lowLevelParams, lowLevelParam)
+	highLevelParams, lowLevelParams, err := buildQueryParameters(t.Parameters, paramsMap, newStatement)
+	if err != nil {
+		return nil, util.NewAgentError("unable to build query parameters", err)
 	}
 
 	connProps := []*bigqueryapi.ConnectionProperty{}
@@ -236,6 +155,130 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
+}
+
+func buildQueryParameters(paramsMetadata parameters.Parameters, paramsMap map[string]any, statement string) ([]bigqueryapi.QueryParameter, []*bigqueryrestapi.QueryParameter, error) {
+	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(paramsMetadata))
+	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(paramsMetadata))
+
+	for _, p := range paramsMetadata {
+		name := p.GetName()
+		value := paramsMap[name]
+
+		// Handle array types: convert []any to typed slices if necessary.
+		if arrayParam, ok := p.(*parameters.ArrayParameter); ok && value != nil {
+			if arrayParamValue, ok := value.([]any); ok {
+				itemType := arrayParam.GetItems().GetType()
+				var err error
+				value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
+				if err != nil {
+					return nil, nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
+				}
+			}
+		}
+
+		// Determine if the parameter is named or positional for the high-level client.
+		var paramNameForHighLevel string
+		if strings.Contains(statement, "@"+name) {
+			paramNameForHighLevel = name
+		}
+
+		// Handle nil values for optional parameters by providing typed NULLs.
+		// BigQuery high-level client requires objects like NullString for NULLs.
+		// BigQuery low-level REST client requires setting the Null fields.
+		finalValue := value
+		isNull := value == nil
+
+		if isNull {
+			switch p.GetType() {
+			case parameters.TypeString:
+				finalValue = bigqueryapi.NullString{Valid: false}
+			case parameters.TypeInt:
+				finalValue = bigqueryapi.NullInt64{Valid: false}
+			case parameters.TypeFloat:
+				finalValue = bigqueryapi.NullFloat64{Valid: false}
+			case parameters.TypeBool:
+				finalValue = bigqueryapi.NullBool{Valid: false}
+			case parameters.TypeArray:
+				// For arrays, provide a typed nil slice based on items type.
+				if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
+					switch arrayParam.GetItems().GetType() {
+					case parameters.TypeString:
+						finalValue = []string(nil)
+					case parameters.TypeInt:
+						finalValue = []int64(nil)
+					case parameters.TypeFloat:
+						finalValue = []float64(nil)
+					case parameters.TypeBool:
+						finalValue = []bool(nil)
+					default:
+						finalValue = []any(nil)
+					}
+				}
+			}
+		}
+
+		// 1. Create the high-level parameter for the final query execution.
+		highLevelParams = append(highLevelParams, bigqueryapi.QueryParameter{
+			Name:  paramNameForHighLevel,
+			Value: finalValue,
+		})
+
+		// 2. Create the low-level parameter for the dry run.
+		lowLevelParam := &bigqueryrestapi.QueryParameter{
+			Name:           paramNameForHighLevel,
+			ParameterType:  &bigqueryrestapi.QueryParameterType{},
+			ParameterValue: &bigqueryrestapi.QueryParameterValue{},
+		}
+
+		if isNull {
+			lowLevelParam.ParameterValue.NullFields = []string{"Value"}
+		}
+
+		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
+			lowLevelParam.ParameterType.Type = "ARRAY"
+			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
+			if err != nil {
+				return nil, nil, fmt.Errorf("unable to get BigQuery type for parameter %q: %w", name, err)
+			}
+			lowLevelParam.ParameterType.ArrayType = &bigqueryrestapi.QueryParameterType{Type: itemType}
+
+			if !isNull {
+				sliceVal := reflect.ValueOf(value)
+				arrayValues := make([]*bigqueryrestapi.QueryParameterValue, sliceVal.Len())
+				for i := 0; i < sliceVal.Len(); i++ {
+					val := sliceVal.Index(i).Interface()
+
+					// Prevent precision loss and scientific notation issues
+					var valStr string
+					switch v := val.(type) {
+					case float64:
+						valStr = strconv.FormatFloat(v, 'f', -1, 64)
+					case float32:
+						valStr = strconv.FormatFloat(float64(v), 'f', -1, 32)
+					default:
+						valStr = fmt.Sprintf("%v", val)
+					}
+
+					arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
+						Value: valStr,
+					}
+				}
+				lowLevelParam.ParameterValue.ArrayValues = arrayValues
+			}
+		} else {
+			bqType, err := bqutil.BQTypeStringFromToolType(p.GetType())
+			if err != nil {
+				return nil, nil, fmt.Errorf("unable to get BigQuery type for parameter %q: %w", name, err)
+			}
+			lowLevelParam.ParameterType.Type = bqType
+			if !isNull {
+				lowLevelParam.ParameterValue.Value = fmt.Sprintf("%v", value)
+			}
+		}
+		lowLevelParams = append(lowLevelParams, lowLevelParam)
+	}
+	return highLevelParams, lowLevelParams, nil
 }
 
 func formatVectorForBigQuery(vectorFloats []float32) any {
