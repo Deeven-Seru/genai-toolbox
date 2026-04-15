@@ -68,4 +68,6 @@ func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVar(&opts.Cfg.McpPrmFile, "mcp-prm-file", "", "Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation.")
 	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.BoolVar(&opts.Cfg.EmulatorMode, "emulator-mode", false, "Enable emulator mode to return mock tool responses instead of calling live backends.")
+	flags.StringVar(&opts.Cfg.EmulatorMocksFile, "emulator-mocks-file", "", "Path to a JSON file containing emulator mocks. Used only when --emulator-mode is enabled.")
 }

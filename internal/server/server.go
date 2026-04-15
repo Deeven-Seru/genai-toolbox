@@ -198,6 +198,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
+	if cfg.EmulatorMode {
+		mocksByTool, err := loadEmulatorMocks(cfg.EmulatorMocksFile)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		toolsMap = wrapToolsForEmulator(toolsMap, mocksByTool)
+		l.InfoContext(ctx, fmt.Sprintf("Emulator mode enabled with mocks file: %s", cfg.EmulatorMocksFile))
+	}
+
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {

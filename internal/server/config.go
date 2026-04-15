@@ -84,6 +84,10 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// EmulatorMode determines whether tool invocations should use local mock responses instead of live backends.
+	EmulatorMode bool
+	// EmulatorMocksFile is a JSON file that defines mock responses for emulator mode.
+	EmulatorMocksFile string
 }
 
 type logFormat string
