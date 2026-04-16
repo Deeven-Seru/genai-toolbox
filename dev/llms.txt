@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-04-10T13:22:51Z
+**GENERATED ON:** 2026-04-16T02:46:14Z
 
 ---
 ### System Directives for AI Models
@@ -573,6 +573,18 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/): No description provided.
 
+      - [vector-assist-apply-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-apply-spec/): The "vector-assist-apply-spec" tool automatically executes all SQL recommendations associated with a specific vector specification or table to finalize the vector search setup.
+
+
+      - [vector-assist-define-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-define-spec/): The "vector-assist-define-spec" tool defines a new vector specification by capturing the user's intent and requirements for a vector search workload, generating SQL recommendations for setting up database, embeddings, and vector indexes.
+
+
+      - [vector-assist-generate-query](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-generate-query/): The "vector-assist-generate-query" tool produces optimized SQL queries for vector search, leveraging metadata and specifications to enable semantic and similarity searches.
+
+
+      - [vector-assist-modify-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-modify-spec/): The "vector-assist-modify-spec" tool modifies an existing vector specification with new parameters or overrides, recalculating the generated SQL recommendations to match the updated requirements.
+
+
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/prebuilt-configs/): Prebuilt configurations for Cloud Sql Postgres.
 
       - [Cloud SQL for PostgreSQL](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/prebuilt-configs/cloud-sql-for-postgresql/): Details of the Cloud SQL for PostgreSQL prebuilt configuration.
@@ -623,29 +635,6 @@ This documentation is structured following the Diátaxis framework to assist in 
 
       - [dataform-compile-local](https://mcp-toolbox.dev/dev/integrations/dataform/tools/dataform-compile-local/): A "dataform-compile-local" tool runs the `dataform compile` CLI command on a local project directory.
 
-
-  - [Dataplex](https://mcp-toolbox.dev/dev/integrations/dataplex/): No description provided.
-
-    - [Dataplex Source](https://mcp-toolbox.dev/dev/integrations/dataplex/source/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
-
-
-    - [Tools](https://mcp-toolbox.dev/dev/integrations/dataplex/tools/): No description provided.
-
-      - [dataplex-lookup-context](https://mcp-toolbox.dev/dev/integrations/dataplex/tools/dataplex-lookup-context/): A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
-
-
-      - [dataplex-lookup-entry](https://mcp-toolbox.dev/dev/integrations/dataplex/tools/dataplex-lookup-entry/): A "dataplex-lookup-entry" tool returns details of a particular entry in Dataplex Catalog.
-
-
-      - [dataplex-search-aspect-types](https://mcp-toolbox.dev/dev/integrations/dataplex/tools/dataplex-search-aspect-types/): A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
-
-
-      - [dataplex-search-entries](https://mcp-toolbox.dev/dev/integrations/dataplex/tools/dataplex-search-entries/): A "dataplex-search-entries" tool allows to search for entries based on the provided query.
-
-
-    - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/dataplex/prebuilt-configs/): Prebuilt configurations for Dataplex.
-
-      - [Dataplex](https://mcp-toolbox.dev/dev/integrations/dataplex/prebuilt-configs/dataplex/): Details of the Dataplex prebuilt configuration.
 
   - [Dataproc Clusters](https://mcp-toolbox.dev/dev/integrations/dataproc/): No description provided.
 
@@ -780,6 +769,29 @@ This documentation is structured following the Diátaxis framework to assist in 
 
       - [http](https://mcp-toolbox.dev/dev/integrations/http/tools/http-tool/): A "http" tool sends out an HTTP request to an HTTP endpoint.
 
+
+  - [Knowledge Catalog](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/): No description provided.
+
+    - [Knowledge Catalog (formerly known as Dataplex) Source](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/): Knowledge Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Knowledge Catalog powers AI, analytics, and business intelligence at scale.
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/): No description provided.
+
+      - [dataplex-lookup-context](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/): A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
+
+
+      - [dataplex-lookup-entry](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-entry/): A "dataplex-lookup-entry" tool returns details of a particular entry in Knowledge Catalog.
+
+
+      - [dataplex-search-aspect-types](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-aspect-types/): A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
+
+
+      - [dataplex-search-entries](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/): A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+
+
+    - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/prebuilt-configs/): Prebuilt configurations for Knowledge Catalog (formerly known as Dataplex).
+
+      - [Knowledge Catalog (formerly known as Dataplex)](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/prebuilt-configs/knowledge-catalog/): Details of the Knowledge Catalog prebuilt configuration.
 
   - [Looker](https://mcp-toolbox.dev/dev/integrations/looker/): No description provided.
 
