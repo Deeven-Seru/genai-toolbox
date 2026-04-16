@@ -308,7 +308,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 
 	if resp.StatusCode != http.StatusOK {
 		logger.WarnContext(ctx, "introspection failed with status: %d", resp.StatusCode)
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
+		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))

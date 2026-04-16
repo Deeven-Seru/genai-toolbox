@@ -503,6 +503,10 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				}
 			}
 
+			// Add logger to context
+			ctx := util.WithLogger(r.Context(), s.logger)
+			r = r.WithContext(ctx)
+
 			// MCP Auth not enabled
 			if mcpSvc == nil {
 				next.ServeHTTP(w, r)
@@ -525,8 +529,19 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
 						http.Error(w, mcpErr.Message, http.StatusForbidden)
 						return
+					default:
+						if mcpErr.Code >= 500 {
+							s.logger.ErrorContext(r.Context(), "internal authentication error", "error", mcpErr.Message)
+							http.Error(w, "internal server error during authentication", mcpErr.Code)
+						} else {
+							http.Error(w, mcpErr.Message, mcpErr.Code)
+						}
+						return
 					}
 				}
+				s.logger.ErrorContext(r.Context(), "unexpected error during authentication", "error", err)
+				http.Error(w, "internal server error during authentication", http.StatusInternalServerError)
+				return
 			}
 
 			next.ServeHTTP(w, r)
