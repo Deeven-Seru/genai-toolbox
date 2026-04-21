@@ -62,7 +62,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 		{
 			desc: "with quota project",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			base_url: http://example.looker.com/
