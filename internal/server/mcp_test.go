@@ -303,7 +303,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				"id":      "prompts-get-non-existent",
 				"error": map[string]any{
 					"code":    -32602.0,
-					"message": `prompt with name "non_existent_prompt" does not exist`,
+					"message": `prompt with name "non_existent_prompt" does not exist in promptset ""`,
 				},
 			},
 		},
@@ -674,6 +674,30 @@ func TestMcpEndpoint(t *testing.T) {
 									"inputSchema": basicInputSchema,
 								},
 							},
+						},
+					},
+				},
+				{
+					name:  "tools/call on tool1_only denied",
+					url:   "/tool1_only",
+					isErr: true,
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-tool1-only",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "some_params",
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-tool1-only",
+						"error": map[string]any{
+							"code":    -32602.0,
+							"message": `tool with name "some_params" does not exist in toolset "tool1_only"`,
 						},
 					},
 				},

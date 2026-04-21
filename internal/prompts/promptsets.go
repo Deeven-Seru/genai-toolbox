@@ -16,6 +16,7 @@ package prompts
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
@@ -36,6 +37,10 @@ func (p Promptset) ToConfig() PromptsetConfig {
 	return p.PromptsetConfig
 }
 
+func (p Promptset) HasPrompt(promptName string) bool {
+	return slices.Contains(p.PromptNames, promptName)
+}
+
 type PromptsetManifest struct {
 	ServerVersion   string              `json:"serverVersion"`
 	PromptsManifest map[string]Manifest `json:"prompts"`
@@ -44,7 +49,7 @@ type PromptsetManifest struct {
 func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]Prompt) (Promptset, error) {
 	// Check each declared prompt name exists
 	var promptset Promptset
-	promptset.Name = t.Name
+	promptset.PromptsetConfig = t
 	if !tools.IsValidName(promptset.Name) {
 		return promptset, fmt.Errorf("invalid promptset name: %s", promptset.Name)
 	}

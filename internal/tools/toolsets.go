@@ -17,6 +17,7 @@ package tools
 import (
 	"fmt"
 	"regexp"
+	"slices"
 )
 
 type ToolsetConfig struct {
@@ -35,6 +36,10 @@ func (t Toolset) ToConfig() ToolsetConfig {
 	return t.ToolsetConfig
 }
 
+func (t Toolset) HasTool(toolName string) bool {
+	return slices.Contains(t.ToolNames, toolName)
+}
+
 type ToolsetManifest struct {
 	ServerVersion string              `json:"serverVersion"`
 	ToolsManifest map[string]Manifest `json:"tools"`
@@ -44,7 +49,7 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	// finish toolset setup
 	// Check each declared tool name exists
 	var toolset Toolset
-	toolset.Name = t.Name
+	toolset.ToolsetConfig = t
 	if !IsValidName(toolset.Name) {
 		return toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
 	}
