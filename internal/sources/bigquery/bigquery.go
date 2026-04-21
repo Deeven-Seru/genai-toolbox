@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"net"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -91,6 +93,7 @@ type Config struct {
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 	MaximumBytesBilled        int64               `yaml:"maximumBytesBilled" validate:"gte=0"`
+	Proxy                     string              `yaml:"proxy"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -165,7 +168,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	if strings.ToLower(r.UseClientOAuth) == "false" || r.UseClientOAuth == "" {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes, r.Proxy)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -182,7 +185,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			s.AuthTokenHeaderName = r.UseClientOAuth
 		}
 		// use client OAuth
-		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name, r.Proxy)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
@@ -518,7 +521,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientAuthorization(), s.ImpersonateServiceAccount, s.Scopes)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientAuthorization(), s.ImpersonateServiceAccount, s.Scopes, s.Proxy)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -680,6 +683,65 @@ func NormalizeValue(v any) any {
 	return v
 }
 
+func newProxyTransport(proxyAddress string) (*http.Transport, error) {
+	baseTransport, ok := http.DefaultTransport.(*http.Transport)
+	var transport *http.Transport
+	if ok {
+		transport = baseTransport.Clone()
+	} else {
+		transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		}
+	}
+	if proxyAddress != "" {
+		proxyURL, err := url.Parse(proxyAddress)
+		if err != nil {
+			return nil, fmt.Errorf("invalid proxy URL %q: %w", proxyAddress, err)
+		}
+		transport.Proxy = http.ProxyURL(proxyURL)
+	} else {
+		transport.Proxy = http.ProxyFromEnvironment
+	}
+	return transport, nil
+}
+
+func newBaseRoundTripper(userAgent, proxyAddress string) (http.RoundTripper, error) {
+	transport, err := newProxyTransport(proxyAddress)
+	if err != nil {
+		return nil, err
+	}
+	return util.NewUserAgentRoundTripper(userAgent, transport), nil
+}
+
+func newHTTPClient(base http.RoundTripper, tokenSource oauth2.TokenSource) *http.Client {
+	rt := base
+	if tokenSource != nil {
+		rt = &oauth2.Transport{Source: tokenSource, Base: base}
+	}
+	return &http.Client{Transport: rt}
+}
+
+func shouldUseRESTClient(proxyAddress string) bool {
+	if proxyAddress != "" {
+		return true
+	}
+	req, err := http.NewRequest(http.MethodGet, "https://bigquery.googleapis.com", nil)
+	if err != nil {
+		return false
+	}
+	proxyURL, err := http.ProxyFromEnvironment(req)
+	return err == nil && proxyURL != nil
+}
+
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -688,6 +750,7 @@ func initBigQueryConnection(
 	location string,
 	impersonateServiceAccount string,
 	scopes []string,
+	proxyAddress string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -698,7 +761,6 @@ func initBigQueryConnection(
 	}
 
 	var tokenSource oauth2.TokenSource
-	var opts []option.ClientOption
 
 	var credScopes []string
 	if len(scopes) > 0 {
@@ -709,21 +771,33 @@ func initBigQueryConnection(
 		credScopes = []string{bigqueryapi.Scope}
 	}
 
+	baseRT, err := newBaseRoundTripper(userAgent, proxyAddress)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to configure base transport: %w", err)
+	}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: baseRT})
+
 	if impersonateServiceAccount != "" {
+		// Use default credentials to call IAMCredentials and mint impersonated tokens.
+		baseCreds, err := google.FindDefaultCredentials(ctx, CloudPlatformScope)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for impersonation: %w", err)
+		}
+		baseHTTPClient := newHTTPClient(baseRT, baseCreds.TokenSource)
 		// Create impersonated credentials token source
 		// This broader scope is needed for tools like conversational analytics
-		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
-			TargetPrincipal: impersonateServiceAccount,
-			Scopes:          credScopes,
-		})
+		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(
+			ctx,
+			impersonate.CredentialsConfig{
+				TargetPrincipal: impersonateServiceAccount,
+				Scopes:          credScopes,
+			},
+			option.WithHTTPClient(baseHTTPClient),
+		)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 		}
 		tokenSource = cloudPlatformTokenSource
-		opts = []option.ClientOption{
-			option.WithUserAgent(userAgent),
-			option.WithTokenSource(cloudPlatformTokenSource),
-		}
 	} else {
 		// Use default credentials
 		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
@@ -731,21 +805,19 @@ func initBigQueryConnection(
 			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
 		}
 		tokenSource = cred.TokenSource
-		opts = []option.ClientOption{
-			option.WithUserAgent(userAgent),
-			option.WithCredentials(cred),
-		}
 	}
 
+	httpClient := newHTTPClient(baseRT, tokenSource)
+
 	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, opts...)
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, opts...)
+	restService, err := bigqueryrestapi.NewService(ctx, option.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
@@ -761,9 +833,9 @@ func initBigQueryConnectionWithOAuthToken(
 	project string,
 	location string,
 	name string,
-	userAgent string,
 	tokenString string,
 	wantRestService bool,
+	baseRT http.RoundTripper,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -773,8 +845,10 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	ts := oauth2.StaticTokenSource(token)
 
+	httpClient := newHTTPClient(baseRT, ts)
+
 	// Initialize the BigQuery client with tokenSource
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
@@ -782,7 +856,7 @@ func initBigQueryConnectionWithOAuthToken(
 
 	if wantRestService {
 		// Initialize the low-level BigQuery REST service using the same credentials
-		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		restService, err := bigqueryrestapi.NewService(ctx, option.WithHTTPClient(httpClient))
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 		}
@@ -801,14 +875,21 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
+	proxyAddress string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	baseRT, err := newBaseRoundTripper(userAgent, proxyAddress)
+	if err != nil {
+		return nil, err
+	}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: baseRT})
+
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, tokenString, wantRestService, baseRT)
 	}, nil
 }
 
@@ -820,6 +901,7 @@ func initDataplexConnection(
 	useClientOAuth bool,
 	impersonateServiceAccount string,
 	scopes []string,
+	proxyAddress string,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
@@ -834,43 +916,59 @@ func initDataplexConnection(
 	}
 
 	if useClientOAuth {
-		clientCreator = newDataplexClientCreator(ctx, project, userAgent)
+		clientCreator = newDataplexClientCreator(ctx, project, userAgent, proxyAddress)
 	} else {
-		var opts []option.ClientOption
-
 		credScopes := scopes
 		if len(credScopes) == 0 {
 			credScopes = []string{CloudPlatformScope}
 		}
 
+		baseRT, err := newBaseRoundTripper(userAgent, proxyAddress)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to configure base transport: %w", err)
+		}
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: baseRT})
+
+		var tokenSource oauth2.TokenSource
 		if impersonateServiceAccount != "" {
+			baseCreds, err := google.FindDefaultCredentials(ctx, CloudPlatformScope)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for impersonation: %w", err)
+			}
+			baseHTTPClient := newHTTPClient(baseRT, baseCreds.TokenSource)
 			// Create impersonated credentials token source
-			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
-				TargetPrincipal: impersonateServiceAccount,
-				Scopes:          credScopes,
-			})
+			ts, err := impersonate.CredentialsTokenSource(
+				ctx,
+				impersonate.CredentialsConfig{
+					TargetPrincipal: impersonateServiceAccount,
+					Scopes:          credScopes,
+				},
+				option.WithHTTPClient(baseHTTPClient),
+			)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 			}
-			opts = []option.ClientOption{
-				option.WithUserAgent(userAgent),
-				option.WithTokenSource(ts),
-			}
+			tokenSource = ts
 		} else {
 			// Use default credentials
 			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 			}
-			opts = []option.ClientOption{
-				option.WithUserAgent(userAgent),
-				option.WithCredentials(cred),
-			}
+			tokenSource = cred.TokenSource
 		}
 
-		client, err = dataplexapi.NewCatalogClient(ctx, opts...)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		if shouldUseRESTClient(proxyAddress) {
+			httpClient := newHTTPClient(baseRT, tokenSource)
+			client, err = dataplexapi.NewCatalogRESTClient(ctx, option.WithHTTPClient(httpClient))
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create Dataplex REST client for project %q: %w", project, err)
+			}
+		} else {
+			client, err = dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(tokenSource))
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+			}
 		}
 	}
 
@@ -882,12 +980,23 @@ func initDataplexConnectionWithOAuthToken(
 	project string,
 	userAgent string,
 	tokenString string,
+	useREST bool,
+	baseRT http.RoundTripper,
 ) (*dataplexapi.CatalogClient, error) {
 	// Construct token source
 	token := &oauth2.Token{
 		AccessToken: string(tokenString),
 	}
 	ts := oauth2.StaticTokenSource(token)
+
+	if useREST {
+		httpClient := newHTTPClient(baseRT, ts)
+		client, err := dataplexapi.NewCatalogRESTClient(ctx, option.WithHTTPClient(httpClient))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Dataplex REST client for project %q: %w", project, err)
+		}
+		return client, nil
+	}
 
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
 	if err != nil {
@@ -900,8 +1009,21 @@ func newDataplexClientCreator(
 	ctx context.Context,
 	project string,
 	userAgent string,
+	proxyAddress string,
 ) func(string) (*dataplexapi.CatalogClient, error) {
+	useREST := shouldUseRESTClient(proxyAddress)
+	var baseRT http.RoundTripper
+	if useREST {
+		var err error
+		baseRT, err = newBaseRoundTripper(userAgent, proxyAddress)
+		if err != nil {
+			return func(string) (*dataplexapi.CatalogClient, error) {
+				return nil, err
+			}
+		}
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: baseRT})
+	}
 	return func(tokenString string) (*dataplexapi.CatalogClient, error) {
-		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString)
+		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString, useREST, baseRT)
 	}
 }

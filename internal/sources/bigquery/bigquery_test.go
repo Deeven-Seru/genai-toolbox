@@ -75,6 +75,24 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			},
 		},
 		{
+			desc: "with proxy example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			proxy: https://proxy.example:8443
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:    "my-instance",
+					Type:    bigquery.SourceType,
+					Project: "my-project",
+					Proxy:   "https://proxy.example:8443",
+				},
+			},
+		},
+		{
 			desc: "use client auth example",
 			in: `
 			kind: source

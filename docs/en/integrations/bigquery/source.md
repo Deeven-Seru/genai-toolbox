@@ -112,6 +112,7 @@ project: "my-project-id"
 # scopes: # Optional: List of OAuth scopes to request.
 #   - "https://www.googleapis.com/auth/bigquery"
 #   - "https://www.googleapis.com/auth/drive.readonly"
+# proxy: "https://proxy.company:8443" # Optional: Route API calls through a proxy. If unset, HTTPS_PROXY/HTTP_PROXY are honored.
 # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 # maximumBytesBilled: 10737418240 # Optional: Per-query bytes scanned cap (in bytes).
 ```
@@ -133,6 +134,7 @@ useClientOAuth: true
 # scopes: # Optional: List of OAuth scopes to request.
 #   - "https://www.googleapis.com/auth/bigquery"
 #   - "https://www.googleapis.com/auth/drive.readonly"
+# proxy: "https://proxy.company:8443" # Optional: Route API calls through a proxy. If unset, HTTPS_PROXY/HTTP_PROXY are honored.
 # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 # maximumBytesBilled: 10737418240 # Optional: Per-query bytes scanned cap (in bytes).
 ```
@@ -148,6 +150,7 @@ useClientOAuth: true
 | allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth            |  string  |    false     | If set to `'true'`, forwards the client's OAuth access token from the default `Authorization` header. If set to a custom header name (e.g., `X-My-Auth`), that header will be used instead. An empty string or `'false'` disables this feature. Defaults to `""` (disabled). |
 | scopes                    | []string |    false     | A list of OAuth 2.0 scopes to use for the credentials. If not provided, default scopes are used.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| proxy                     |  string  |    false     | Optional HTTP(S) proxy URL to route API calls through. If unset, HTTPS_PROXY/HTTP_PROXY are honored.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |
 | maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
 | maximumBytesBilled             |  int64   |    false     | The maximum bytes billed per query. When set, queries that exceed this limit fail before executing. |
