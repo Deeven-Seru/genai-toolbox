@@ -446,6 +446,10 @@ func (s *Source) BigQueryLocation() string {
 	return s.Location
 }
 
+func (s *Source) BigQueryQuotaProject() string {
+	return s.QuotaProject
+}
+
 func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 	return s.TokenSource
 }
