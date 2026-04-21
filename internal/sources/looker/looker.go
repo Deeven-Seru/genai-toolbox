@@ -76,6 +76,7 @@ type Config struct {
 	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 	Project            string `yaml:"project"`
 	Location           string `yaml:"location"`
+	QuotaProject       string `yaml:"quotaProject"`
 	SessionLength      int64  `yaml:"sessionLength"`
 }
 
@@ -176,6 +177,10 @@ func (s *Source) GoogleCloudProject() string {
 
 func (s *Source) GoogleCloudLocation() string {
 	return s.Location
+}
+
+func (s *Source) GoogleCloudQuotaProject() string {
+	return s.QuotaProject
 }
 
 func (s *Source) GoogleCloudTokenSource() oauth2.TokenSource {

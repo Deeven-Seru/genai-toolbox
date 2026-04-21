@@ -59,6 +59,7 @@ type compatibleSource interface {
 	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
+	GoogleCloudQuotaProject() string
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
@@ -274,6 +275,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
+	}
+	if quotaProject := source.GoogleCloudQuotaProject(); quotaProject != "" {
+		headers["X-Goog-User-Project"] = quotaProject
 	}
 
 	payload := CAPayload{
