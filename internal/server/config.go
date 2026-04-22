@@ -62,6 +62,8 @@ type ServerConfig struct {
 	TelemetryGCP bool
 	// TelemetryOTLP defines OTLP collector url for telemetry exports.
 	TelemetryOTLP string
+	// TelemetryGCPProject defines the Google Cloud project ID to use for telemetry exports.
+	TelemetryGCPProject string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
 	// Stdio indicates if Toolbox is listening via MCP stdio.

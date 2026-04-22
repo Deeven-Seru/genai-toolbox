@@ -55,7 +55,7 @@ func TestServe(t *testing.T) {
 		AllowedHosts: []string{"*"},
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -568,7 +568,7 @@ func TestPRMEndpoint(t *testing.T) {
 	defer cancel()
 
 	// Setup telemetry and logging
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
