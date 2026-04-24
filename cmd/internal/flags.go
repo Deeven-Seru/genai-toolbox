@@ -66,6 +66,7 @@ func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.BoolVar(&opts.Cfg.EnableAPI, "enable-api", false, "Enable the /api endpoint.")
 	flags.StringVar(&opts.Cfg.ToolboxUrl, "toolbox-url", "", "Specifies the Toolbox URL. Used as the resource field in the MCP PRM file when MCP Auth is enabled. Falls back to TOOLBOX_URL environment variable.")
 	flags.StringVar(&opts.Cfg.McpPrmFile, "mcp-prm-file", "", "Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation.")
-	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
-	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.BoolVar(&opts.Cfg.Remote, "remote", false, "Allows all origins and hosts to access the server. This is not secure and should only be used for remote deployments where DNS rebinding is mitigated at another layer.")
+	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"localhost", "127.0.0.1", "::1"}, "Specifies a list of origins permitted to access this server. Defaults to 'localhost', '127.0.0.1', '::1'.")
+	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"localhost", "127.0.0.1", "::1"}, "Specifies a list of hosts permitted to access this server. Defaults to 'localhost', '127.0.0.1', '::1'.")
 }

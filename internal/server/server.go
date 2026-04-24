@@ -390,16 +390,20 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 
 	// cors
-	allowAllOrigins := slices.Contains(cfg.AllowedOrigins, "*")
+	allowAllOrigins := cfg.Remote || slices.Contains(cfg.AllowedOrigins, "*")
 	if allowAllOrigins {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
+		s.logger.WarnContext(ctx, "wildcard (`*`) or `--remote` flag allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
 	}
 	allowCredentials := !allowAllOrigins
 	if allowAllOrigins {
-		s.logger.WarnContext(ctx, "disabling Allow-Credentials because `--allowed-origins` includes `*`; browsers reject credentials with wildcard origins")
+		s.logger.WarnContext(ctx, "disabling Allow-Credentials because `--allowed-origins` includes `*` or `--remote` is enabled; browsers reject credentials with wildcard origins")
+	}
+	allowedOrigins := cfg.AllowedOrigins
+	if cfg.Remote {
+		allowedOrigins = []string{"*"}
 	}
 	corsOpts := cors.Options{
-		AllowedOrigins:   cfg.AllowedOrigins,
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowCredentials: allowCredentials, // only enable when origins are explicit
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version"},
@@ -408,16 +412,21 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
-	if slices.Contains(cfg.AllowedHosts, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+	allowAllHosts := cfg.Remote || slices.Contains(cfg.AllowedHosts, "*")
+	if allowAllHosts {
+		s.logger.WarnContext(ctx, "wildcard (`*`) or `--remote` flag allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
 	}
 	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
-	for _, h := range cfg.AllowedHosts {
-		hostname := h
-		if host, _, err := net.SplitHostPort(h); err == nil {
-			hostname = host
+	if allowAllHosts {
+		allowedHostsMap["*"] = struct{}{}
+	} else {
+		for _, h := range cfg.AllowedHosts {
+			hostname := h
+			if host, _, err := net.SplitHostPort(h); err == nil {
+				hostname = host
+			}
+			allowedHostsMap[hostname] = struct{}{}
 		}
-		allowedHostsMap[hostname] = struct{}{}
 	}
 	r.Use(hostCheck(allowedHostsMap))
 

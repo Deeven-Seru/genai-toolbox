@@ -55,10 +55,10 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 		c.TelemetryServiceName = "toolbox"
 	}
 	if c.AllowedOrigins == nil {
-		c.AllowedOrigins = []string{"http://localhost", "http://127.0.0.1"}
+		c.AllowedOrigins = []string{"localhost", "127.0.0.1", "::1"}
 	}
 	if c.AllowedHosts == nil {
-		c.AllowedHosts = []string{"localhost", "127.0.0.1"}
+		c.AllowedHosts = []string{"localhost", "127.0.0.1", "::1"}
 	}
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}

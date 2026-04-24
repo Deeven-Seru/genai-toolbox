@@ -117,8 +117,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	internal.ConfigFileFlags(flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
-	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"http://localhost", "http://127.0.0.1"}, "Specifies a list of origins permitted to access this server. Defaults to localhost only.")
-	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"localhost", "127.0.0.1"}, "Specifies a list of hosts permitted to access this server. Defaults to localhost only.")
+
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
