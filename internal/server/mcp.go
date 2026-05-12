@@ -470,11 +470,19 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		// Generate a new uuid if unable to decode
 		id := uuid.New().String()
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+		}
 		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
 		return
