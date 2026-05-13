@@ -64,6 +64,7 @@ type Config struct {
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 
 	ScopesRequired []string `yaml:"scopesRequired"`
+	VectorFields []fsUtil.VectorFieldConfig `yaml:"vectorFields"`
 }
 
 // validate interface
@@ -117,6 +118,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		returnDataParameter,
 	}
 
+	vectorFields := make([]fsUtil.VectorFieldRuntime, 0, len(cfg.VectorFields))
+	for _, vfCfg := range cfg.VectorFields {
+		param, runtime, err := fsUtil.BuildVectorFieldParameter(vfCfg)
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, param)
+		vectorFields = append(vectorFields, runtime)
+	}
+
 	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
@@ -126,6 +137,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:  params,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
+		vectorFields: vectorFields,
 	}
 	return t, nil
 }
@@ -138,6 +150,7 @@ type Tool struct {
 	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+	vectorFields []fsUtil.VectorFieldRuntime
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -167,6 +180,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", documentDataKey), nil)
+	}
+
+	vectorValues, err := fsUtil.ExtractVectorFieldValues(mapParams, t.vectorFields)
+	if err != nil {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid vector field: %v", err), err)
 	}
 
 	// Get update mask if provided
