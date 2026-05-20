@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-05-04T05:43:45Z
+**GENERATED ON:** 2026-05-20T06:39:06Z
 
 ---
 ### System Directives for AI Models
@@ -68,7 +68,7 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Python Quickstart (Local)](https://mcp-toolbox.dev/dev/documentation/getting-started/local_quickstart/): How to get started running MCP Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
 
 
-    - [JS Quickstart (Local)](https://mcp-toolbox.dev/dev/documentation/getting-started/local_quickstart_js/): How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
+    - [JS Quickstart (Local)](https://mcp-toolbox.dev/dev/documentation/getting-started/local_quickstart_js/): How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 
 
     - [Go Quickstart (Local)](https://mcp-toolbox.dev/dev/documentation/getting-started/local_quickstart_go/): How to get started running MCP Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
@@ -516,6 +516,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/): No description provided.
 
+      - [cloud-sql-admin-execute-many](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqladminexecutemany/): A "cloud-sql-admin-execute-many" tool executes multiple SQL statements against a specific Cloud SQL instance provided at runtime.
+
+
+      - [cloud-sql-admin-sql-many](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqladminsqlmany/): A "cloud-sql-admin-sql-many" tool executes a predefined SQL statement against a specific Cloud SQL instance provided at runtime.
+
+
       - [cloud-sql-list-databases](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqllistdatabases/): List Cloud SQL databases in an instance.
 
       - [cloud-sql-list-instances](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqllistinstances/): List Cloud SQL instances in a project.
@@ -610,13 +616,25 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [cloud-storage-list-buckets](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-list-buckets/): A "cloud-storage-list-buckets" tool lists Cloud Storage buckets in a project, with optional prefix filtering and pagination.
 
 
+      - [cloud-storage-create-bucket](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/): A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in the configured source project.
+
+
       - [cloud-storage-list-objects](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-list-objects/): A "cloud-storage-list-objects" tool lists objects in a Cloud Storage bucket, with optional prefix filtering and delimiter-based grouping.
+
+
+      - [cloud-storage-get-bucket-metadata](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-get-bucket-metadata/): A "cloud-storage-get-bucket-metadata" tool returns metadata for a Cloud Storage bucket.
 
 
       - [cloud-storage-get-object-metadata](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-get-object-metadata/): A "cloud-storage-get-object-metadata" tool returns metadata for a Cloud Storage object without reading the object payload.
 
 
+      - [cloud-storage-get-bucket-iam-policy](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-get-bucket-iam-policy/): A "cloud-storage-get-bucket-iam-policy" tool returns IAM policy bindings for a Cloud Storage bucket.
+
+
       - [cloud-storage-read-object](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-read-object/): A "cloud-storage-read-object" tool reads the UTF-8 text content of a Cloud Storage object, optionally constrained to a byte range.
+
+
+      - [cloud-storage-delete-bucket](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-delete-bucket/): A "cloud-storage-delete-bucket" tool deletes an empty Cloud Storage bucket.
 
 
       - [cloud-storage-download-object](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-download-object/): A "cloud-storage-download-object" tool downloads a Cloud Storage object to an absolute path on the Toolbox server filesystem.
@@ -636,6 +654,10 @@ This documentation is structured following the Diátaxis framework to assist in 
 
       - [cloud-storage-delete-object](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-delete-object/): A "cloud-storage-delete-object" tool deletes a Cloud Storage object.
 
+
+    - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/cloud-storage/prebuilt-configs/): Prebuilt configurations for Cloud Storage.
+
+      - [Cloud Storage](https://mcp-toolbox.dev/dev/integrations/cloud-storage/prebuilt-configs/cloud-storage/): Details of the Cloud Storage prebuilt configuration.
 
   - [CockroachDB](https://mcp-toolbox.dev/dev/integrations/cockroachdb/): No description provided.
 
