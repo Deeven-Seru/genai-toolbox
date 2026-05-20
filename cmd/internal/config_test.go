@@ -51,7 +51,7 @@ func TestParseEnv(t *testing.T) {
 			in:        "${FOO}",
 			want:      "",
 			err:       true,
-			errString: `environment variable not found: "FOO"`,
+			errString: `environment variable not found: "FOO" (line 1, column 1)`,
 		},
 		{
 			desc: "without default with env",
