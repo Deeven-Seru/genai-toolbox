@@ -52,6 +52,7 @@ import (
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
 	version             string
+	sqlCommenterEnabled bool
 	toolboxUrl          string
 	srv                 *http.Server
 	listener            net.Listener
@@ -387,6 +388,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	s := &Server{
 		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
 		srv:                 srv,
 		root:                r,
 		logger:              l,
@@ -518,7 +520,8 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				return
 			}
 
-			if err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header); err != nil {
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
 				var mcpErr *generic.MCPAuthError
 				if errors.As(err, &mcpErr) {
 					switch mcpErr.Code {
@@ -544,6 +547,9 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
 				return
 			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
 		})
