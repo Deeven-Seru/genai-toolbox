@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequery"
+	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -299,6 +300,56 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 						parameters.NewFloatParameterWithRequired("minGdp", "Minimum GDP value", true),
 						parameters.NewBooleanParameterWithRequired("isActive", "Filter by active status", true),
 						parameters.NewStringParameterWithRequired("startDate", "Start date in RFC3339 format", true),
+					},
+				},
+			},
+		},
+		{
+			desc: "with vector query configuration",
+			in: `
+            kind: tool
+            name: query_with_vector
+            type: firestore-query
+            source: vec-firestore
+            description: Query with vector search
+            collectionPath: "documents"
+            limit: 25
+            vectorQuery:
+                name: search_prompt
+                description: Natural language description
+                fieldPath: embedding
+                embeddedBy: gemini-model
+                distanceMeasure: COSINE
+                distanceResultField: distance
+                distanceThreshold: 0.5
+                required: false
+            parameters:
+                - name: base
+                  type: string
+                  description: Base filter
+                  required: true
+			`,
+			want: server.ToolConfigs{
+				"query_with_vector": firestorequery.Config{
+					Name:           "query_with_vector",
+					Type:           "firestore-query",
+					Source:         "vec-firestore",
+					Description:    "Query with vector search",
+					CollectionPath: "documents",
+					Limit:          "25",
+					AuthRequired:   []string{},
+					VectorQuery: &fsUtil.VectorQueryConfig{
+						Name:                "search_prompt",
+						Description:         "Natural language description",
+						FieldPath:           "embedding",
+						EmbeddedBy:          "gemini-model",
+						DistanceMeasure:     "COSINE",
+						DistanceResultField: "distance",
+						DistanceThreshold:   func() *float64 { v := 0.5; return &v }(),
+						Required:            false,
+					},
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("base", "Base filter", true),
 					},
 				},
 			},

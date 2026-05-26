@@ -25,6 +25,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	firestoreSource "github.com/googleapis/mcp-toolbox/internal/sources/firestore"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -92,17 +93,18 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
 	BuildQuery(string, firestoreapi.EntityFilter, []string, string, firestoreapi.Direction, int, bool) (*firestoreapi.Query, error)
-	ExecuteQuery(context.Context, *firestoreapi.Query, bool) (any, error)
+	ExecuteQuery(context.Context, firestoreSource.DocumentQuery, bool) (any, error)
 }
 
 // Config represents the configuration for the Firestore query collection tool
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Name         string                    `yaml:"name" validate:"required"`
+	Type         string                    `yaml:"type" validate:"required"`
+	Source       string                    `yaml:"source" validate:"required"`
+	Description  string                    `yaml:"description" validate:"required"`
+	AuthRequired []string                  `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations    `yaml:"annotations,omitempty"`
+	VectorQuery  *fsUtil.VectorQueryConfig `yaml:"vectorQuery"`
 
 	ScopesRequired []string `yaml:"scopesRequired"`
 }
@@ -120,11 +122,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create parameters
 	params := createParameters()
 
+	var vectorQueryRuntime *fsUtil.VectorQueryRuntime
+	if cfg.VectorQuery != nil {
+		param, runtime, err := fsUtil.BuildVectorQueryRuntime(cfg.VectorQuery)
+		if err != nil {
+			return nil, err
+		}
+		if param != nil {
+			params = append(params, param)
+		}
+		vectorQueryRuntime = runtime
+	}
+
 	// finish tool setup
 	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		vectorQuery: vectorQueryRuntime,
 	}
 	return t, nil
 }
@@ -200,8 +215,9 @@ var _ tools.Tool = Tool{}
 // Tool represents the Firestore query collection tool
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	vectorQuery *fsUtil.VectorQueryRuntime
 }
 
 // FilterConfig represents a filter for the query
@@ -254,7 +270,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Parse parameters
-	queryParams, err := t.parseQueryParameters(params)
+	mapParams := params.AsMap()
+	queryParams, err := t.parseQueryParameters(mapParams)
 	if err != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("failed to parse query parameters: %v", err), err)
 	}
@@ -284,11 +301,32 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		orderByDirection = queryParams.OrderBy.GetDirection()
 	}
 
-	// Build the query
+	if t.vectorQuery != nil {
+		vectorValues, ok, extractErr := fsUtil.ExtractVectorQueryValue(mapParams, t.vectorQuery)
+		if extractErr != nil {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid vector query: %v", extractErr), extractErr)
+		}
+		if ok {
+			// Build the query WITHOUT limit for vector search
+			query, err := source.BuildQuery(queryParams.CollectionPath, filter, nil, orderByField, orderByDirection, 0, queryParams.AnalyzeQuery)
+			if err != nil {
+				return nil, util.ProcessGcpError(err)
+			}
+			nearestQuery := query.FindNearest(t.vectorQuery.FieldPath, firestoreapi.Vector64(vectorValues), queryParams.Limit, t.vectorQuery.Measure, fsUtil.BuildFindNearestOptions(t.vectorQuery))
+			resp, err := source.ExecuteQuery(ctx, nearestQuery, queryParams.AnalyzeQuery)
+			if err != nil {
+				return nil, util.ProcessGcpError(err)
+			}
+			return resp, nil
+		}
+	}
+
+	// Build the regular query with limit
 	query, err := source.BuildQuery(queryParams.CollectionPath, filter, nil, orderByField, orderByDirection, queryParams.Limit, queryParams.AnalyzeQuery)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
+
 	resp, err := source.ExecuteQuery(ctx, query, queryParams.AnalyzeQuery)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
@@ -306,9 +344,7 @@ type queryParameters struct {
 }
 
 // parseQueryParameters extracts and validates parameters from the input
-func (t Tool) parseQueryParameters(params parameters.ParamValues) (*queryParameters, error) {
-	mapParams := params.AsMap()
-
+func (t Tool) parseQueryParameters(mapParams map[string]any) (*queryParameters, error) {
 	// Get collection path
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
