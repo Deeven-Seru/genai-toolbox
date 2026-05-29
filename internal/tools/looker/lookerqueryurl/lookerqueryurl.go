@@ -75,11 +75,9 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	params := lookercommon.GetQueryParameters()
 
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
-		"The visualization config for the query",
-		"",
-	)
+	vizParameter := parameters.NewMapParameter("vis_config", "The visualization config for the query", "", parameters.WithMapDefault(
+		map[string]any{}))
+
 	params = append(params, vizParameter)
 
 	// finish tool setup

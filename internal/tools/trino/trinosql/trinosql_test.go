@@ -66,9 +66,9 @@ func TestParseFromYamlTrino(t *testing.T) {
 					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("id", "ID to filter by",
+						parameters.NewStringParameter("id", "ID to filter by", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -146,9 +146,9 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("catalog", "The catalog to query from."),

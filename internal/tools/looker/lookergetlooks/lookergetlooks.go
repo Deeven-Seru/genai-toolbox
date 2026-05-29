@@ -72,10 +72,10 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the look.")
-	descParameter := parameters.NewStringParameterWithDefault("desc", "", "The description of the look.")
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 100, "The number of looks to fetch. Default 100")
-	offsetParameter := parameters.NewIntParameterWithDefault("offset", 0, "The number of looks to skip before fetching. Default 0")
+	titleParameter := parameters.NewStringParameter("title", "The title of the look.", parameters.WithStringDefault(""))
+	descParameter := parameters.NewStringParameter("desc", "The description of the look.", parameters.WithStringDefault(""))
+	limitParameter := parameters.NewIntParameter("limit", "The number of looks to fetch. Default 100", parameters.WithIntDefault(100))
+	offsetParameter := parameters.NewIntParameter("offset", "The number of looks to skip before fetching. Default 0", parameters.WithIntDefault(0))
 	params := parameters.Parameters{
 		titleParameter,
 		descParameter,

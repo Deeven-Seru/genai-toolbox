@@ -85,14 +85,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	} else {
 		projectParam = parameters.NewStringParameter("project", "The GCP project ID to list clusters for.")
 	}
 
 	allParameters := parameters.Parameters{
 		projectParam,
-		parameters.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		parameters.NewStringParameter("location", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')", parameters.WithStringDefault("-")),
 	}
 	paramManifest := allParameters.Manifest()
 

@@ -90,7 +90,7 @@ func InitializeDatasetParameters(
 			datasetID := parts[1]
 			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParam = parameters.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
+			datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription, parameters.WithStringDefault(datasetID))
 		} else {
 			datasetIDsByProject := make(map[string][]string)
 			for _, ds := range allowedDatasets {
@@ -117,7 +117,7 @@ func InitializeDatasetParameters(
 		datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription)
 	}
 
-	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	projectParam = parameters.NewStringParameter(projectKey, projectDescription, parameters.WithStringDefault(defaultProjectID))
 
 	return projectParam, datasetParam
 }

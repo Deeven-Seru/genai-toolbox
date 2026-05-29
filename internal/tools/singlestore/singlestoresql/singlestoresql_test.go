@@ -66,9 +66,9 @@ func TestParseFromYaml(t *testing.T) {
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -116,9 +116,9 @@ func TestParseFromYaml(t *testing.T) {
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("tableName", "The table to select hotels from."),

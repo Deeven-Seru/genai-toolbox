@@ -67,11 +67,11 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"")
-	dataScanID := parameters.NewStringParameterWithDefault("data_scan_id", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
-	tableName := parameters.NewStringParameterWithDefault("table_name", "", "Optional. The name of the table to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data quality scans in the page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
+	filter := parameters.NewStringParameter("filter", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"", parameters.WithStringDefault(""))
+	dataScanID := parameters.NewStringParameter("data_scan_id", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.", parameters.WithStringDefault(""))
+	tableName := parameters.NewStringParameter("table_name", "Optional. The name of the table to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"", parameters.WithStringDefault(""))
+	pageSize := parameters.NewIntParameter("pageSize", "Number of returned data quality scans in the page.", parameters.WithIntDefault(10))
+	orderBy := parameters.NewStringParameter("orderBy", "Specifies the ordering of results.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{filter, dataScanID, tableName, pageSize, orderBy}
 
 	t := Tool{

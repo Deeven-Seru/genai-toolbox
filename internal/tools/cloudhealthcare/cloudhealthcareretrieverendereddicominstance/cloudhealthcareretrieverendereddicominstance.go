@@ -91,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
 		parameters.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
 		parameters.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
-		parameters.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
+		parameters.NewIntParameter(frameNumberKey, "The frame number to retrieve (1-based). Only applicable to multi-frame instances.", parameters.WithIntDefault(1)),
 	}
 	if len(s.AllowedDICOMStores()) != 1 {
 		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))

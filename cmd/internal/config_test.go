@@ -935,8 +935,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						AuthRequired: []string{},
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1041,8 +1041,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						AuthRequired: []string{"my-google-service"},
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1210,9 +1210,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -1356,9 +1356,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},

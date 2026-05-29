@@ -62,8 +62,8 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					NLConfig:     "my_nl_config",
 					AuthRequired: []string{"my-google-auth-service"},
 					NLConfigParameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
+						parameters.NewStringParameter("user_id", "user_id to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}})),
 					},
 				},
 			},
@@ -103,10 +103,11 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					NLConfig:     "complex_nl_config",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					NLConfigParameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
-						parameters.NewStringParameterWithAuth("user_email", "user_email to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}}),
+						parameters.NewStringParameter("user_id", "user_id to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}})),
+
+						parameters.NewStringParameter("user_email", "user_email to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}})),
 					},
 				},
 			},

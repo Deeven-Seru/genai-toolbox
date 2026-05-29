@@ -125,12 +125,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	sqlParameter := parameters.NewStringParameter("sql", sqlDescriptionBuilder.String())
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		false,
+
 		"If set to true, the query will be validated and information about the execution will be returned "+
-			"without running the query. Defaults to false.",
-	)
+			"without running the query. Defaults to false.", parameters.WithBooleanDefault(
+
+			false))
+
 	params := parameters.Parameters{sqlParameter, dryRunParameter}
 
 	// finish tool setup

@@ -72,7 +72,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	payloadParams := parameters.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
+	payloadParams := parameters.NewStringParameter(dataParamsKey, "the JSON payload to insert, should be a JSON object", parameters.WithStringRequired(true))
 
 	allParameters := parameters.Parameters{payloadParams}
 

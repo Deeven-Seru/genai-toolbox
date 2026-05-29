@@ -35,7 +35,7 @@ description: Lists all user tables in the connected schema, including segment si
 statement: |
   SELECT 
         table_name 
-  FROM  user_tables;
+  FROM  user_tables
 ---
 kind: tool
 name: list_active_sessions
@@ -61,7 +61,7 @@ statement: |
          AND s.sql_id = sql.sql_id (+)
          AND s.audsid != userenv('sessionid') -- Exclude current session
      ORDER BY s.last_call_et DESC
-     FETCH FIRST 50 ROWS ONLY;
+     FETCH FIRST 50 ROWS ONLY
 ---
 kind: tool
 name: get_query_plan
@@ -100,7 +100,7 @@ statement: |
       v$sql
   ORDER BY
       elapsed_time DESC
-  FETCH FIRST 5 ROWS ONLY;
+  FETCH FIRST 5 ROWS ONLY
 ---
 kind: tool
 name: list_tablespace_usage
@@ -121,7 +121,7 @@ statement: |
   GROUP BY
       t.tablespace_name, t.total_bytes
   ORDER BY
-      used_pct DESC;
+      used_pct DESC
 ---
 kind: tool
 name: list_invalid_objects
@@ -140,7 +140,7 @@ statement: |
       status = 'INVALID'  
       AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity  
   ORDER BY  
-      owner, object_type, object_name; 
+      owner, object_type, object_name
 ---
 kind: toolset
 name: oracle_database_tools

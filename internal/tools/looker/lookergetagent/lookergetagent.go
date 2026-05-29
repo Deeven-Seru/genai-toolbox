@@ -72,7 +72,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
+	agentIdParameter := parameters.NewStringParameter("agent_id", "The ID of the agent.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{agentIdParameter}
 
 	return Tool{

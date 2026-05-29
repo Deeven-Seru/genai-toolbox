@@ -89,9 +89,9 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("view_name", "", "Optional: A specific view name to search for."),
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name to search for."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("view_name", "Optional: A specific view name to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("schema_name", "Optional: A specific schema name to search for.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(50)),
 	}
 	paramManifest := allParameters.Manifest()
 	if cfg.Description == "" {

@@ -82,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("clusterName", "The short name of the cluster, e.g. for \"projects/my-project/regions/us-central1/clusters/my-cluster\", pass \"my-cluster\" (the project and region are inherited from the source)", false),
+		parameters.NewStringParameter("clusterName", "The short name of the cluster, e.g. for \"projects/my-project/regions/us-central1/clusters/my-cluster\", pass \"my-cluster\" (the project and region are inherited from the source)", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

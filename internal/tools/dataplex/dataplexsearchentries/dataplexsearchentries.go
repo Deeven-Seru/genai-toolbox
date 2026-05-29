@@ -73,9 +73,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			"For example, to find a table that might have been renamed, you could use 'type:table (name:books OR fiction)'. "+
 			"This can be more efficient than multiple separate calls."+
 			"Warning: Performing broad searches without specific filters (e.g., type:table) can be slow and consume significant resources. When performing exploratory searches, always use the pageSize parameter to limit the number of results returned.")
-	scope := parameters.NewStringParameterWithDefault("scope", "", "A scope limits the search space to a particular project or organization. It must be in the format: organizations/<org_id> or projects/<project_id> or projects/<project_number>.")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
+	scope := parameters.NewStringParameter("scope", "A scope limits the search space to a particular project or organization. It must be in the format: organizations/<org_id> or projects/<project_id> or projects/<project_number>.", parameters.WithStringDefault(""))
+	pageSize := parameters.NewIntParameter("pageSize", "Number of results in the search page.", parameters.WithIntDefault(5))
+	orderBy := parameters.NewStringParameter("orderBy", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc", parameters.WithStringDefault("relevance"))
 	params := parameters.Parameters{query, scope, pageSize, orderBy}
 
 	t := Tool{

@@ -106,10 +106,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"The name of the time series timestamp column.")
 	dataColumnNameParameter := parameters.NewStringParameter("data_col",
 		"The name of the time series data column.")
-	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
-		"An array of the time series id column names.",
-		parameters.NewStringParameter("id_col", "The name of time series id column."))
-	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
+	idColumnNameParameter := parameters.NewArrayParameter("id_cols", "An array of the time series id column names.", parameters.NewStringParameter("id_col", "The name of time series id column."), parameters.WithArrayDefault([]any{}))
+
+	horizonParameter := parameters.NewIntParameter("horizon", "The number of forecasting steps.", parameters.WithIntDefault(10))
 	params := parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
 

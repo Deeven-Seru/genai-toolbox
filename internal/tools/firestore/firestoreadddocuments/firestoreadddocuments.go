@@ -95,11 +95,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"", // Empty string for generic map that accepts any value type
 	)
 
-	returnDataParameter := parameters.NewBooleanParameterWithDefault(
+	returnDataParameter := parameters.NewBooleanParameter(
 		returnDocumentDataKey,
-		false,
-		"If set to true the output will have the data of the created document. This flag if set to false will help avoid overloading the context of the agent.",
-	)
+
+		"If set to true the output will have the data of the created document. This flag if set to false will help avoid overloading the context of the agent.", parameters.WithBooleanDefault(
+
+			false))
 
 	params := parameters.Parameters{
 		collectionPathParameter,

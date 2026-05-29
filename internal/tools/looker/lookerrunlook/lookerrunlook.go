@@ -75,7 +75,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	lookidParameter := parameters.NewStringParameter("look_id", "The id of the look to run.")
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit. Default 500")
+	limitParameter := parameters.NewIntParameter("limit", "The row limit. Default 500", parameters.WithIntDefault(500))
 
 	params := parameters.Parameters{
 		lookidParameter,

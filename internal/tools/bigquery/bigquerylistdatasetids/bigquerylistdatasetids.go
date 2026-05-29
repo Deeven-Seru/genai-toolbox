@@ -96,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		projectParameterDescription = "The Google Cloud project to list dataset ids."
 	}
 
-	projectParameter = parameters.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), projectParameterDescription)
+	projectParameter = parameters.NewStringParameter(projectKey, projectParameterDescription, parameters.WithStringDefault(s.BigQueryProject()))
 
 	params := parameters.Parameters{projectParameter}
 

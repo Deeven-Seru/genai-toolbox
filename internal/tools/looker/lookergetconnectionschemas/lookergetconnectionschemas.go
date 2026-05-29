@@ -73,7 +73,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	connParameter := parameters.NewStringParameter("conn", "The connection containing the schemas.")
-	dbParameter := parameters.NewStringParameterWithRequired("db", "The optional database to search", false)
+	dbParameter := parameters.NewStringParameter("db", "The optional database to search", parameters.WithStringRequired(false))
 	params := parameters.Parameters{connParameter, dbParameter}
 
 	// finish tool setup

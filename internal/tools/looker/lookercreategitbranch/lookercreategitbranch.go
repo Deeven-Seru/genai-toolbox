@@ -74,7 +74,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	projectIdParameter := parameters.NewStringParameter("project_id", "The project_id")
 	branchParameter := parameters.NewStringParameter("branch", "The git branch to create")
-	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to use as the start of a new branch. Defaults to HEAD of current branch if not specified.")
+	refParameter := parameters.NewStringParameter("ref", "The ref to use as the start of a new branch. Defaults to HEAD of current branch if not specified.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
 	// finish tool setup
