@@ -44,6 +44,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/autodiscover"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -200,6 +201,45 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		toolNames = append(toolNames, name)
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
+
+	// Auto Schema Discovery for introspectable sources
+	discoverSourceNames := make([]string, 0, len(sourcesMap))
+	for name := range sourcesMap {
+		discoverSourceNames = append(discoverSourceNames, name)
+	}
+	slices.Sort(discoverSourceNames)
+
+	for _, sourceName := range discoverSourceNames {
+		source := sourcesMap[sourceName]
+		introspectable, ok := source.(sources.IntrospectableSource)
+		if !ok || !introspectable.IsAutoDiscoverEnabled() {
+			continue
+		}
+
+		l.InfoContext(ctx, fmt.Sprintf("Running Auto Schema Discovery for source %q...", sourceName))
+		tables, err := introspectable.DiscoverTables(ctx)
+		if err != nil {
+			l.ErrorContext(ctx, "failed to introspect database schema", "source", sourceName, "error", err)
+			continue
+		}
+
+		for _, table := range tables {
+			generated, err := autodiscover.GenerateCRUDTools(sourceName, source.SourceType(), table)
+			if err != nil {
+				l.ErrorContext(ctx, "failed to generate CRUD tools", "source", sourceName, "table", table.TableName, "error", err)
+				continue
+			}
+
+			for _, t := range generated {
+				if _, exists := toolsMap[t.GetName()]; exists {
+					l.WarnContext(ctx, "skipping generated tool because a tool with the same name already exists", "name", t.GetName())
+					continue
+				}
+				toolsMap[t.GetName()] = t
+				l.DebugContext(ctx, fmt.Sprintf("Registered auto-discovered tool %q", t.GetName()))
+			}
+		}
+	}
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))

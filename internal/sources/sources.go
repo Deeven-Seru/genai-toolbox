@@ -65,6 +65,28 @@ type Source interface {
 	ToConfig() SourceConfig
 }
 
+// TableSchema represents the schema metadata of a database table.
+type TableSchema struct {
+	TableName string
+	Columns   []ColumnSchema
+}
+
+// ColumnSchema represents the schema metadata of a database column.
+type ColumnSchema struct {
+	ColumnName    string
+	DataType      string
+	IsNullable    bool
+	IsPrimaryKey  bool
+	ColumnDefault string
+}
+
+// IntrospectableSource represents a Source that supports schema introspection and zero-config tool generation.
+type IntrospectableSource interface {
+	Source
+	IsAutoDiscoverEnabled() bool
+	DiscoverTables(ctx context.Context) ([]TableSchema, error)
+}
+
 // InitConnectionSpan adds a span for database pool connection initialization
 func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceType, sourceName string) (context.Context, trace.Span) {
 	ctx, span := tracer.Start(

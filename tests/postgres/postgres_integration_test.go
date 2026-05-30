@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/postgres"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -179,4 +181,49 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
 	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
+
+	// Test postgres dynamic schema discovery integration
+	t.Run("Auto Schema Introspection", func(t *testing.T) {
+		postgresCfg := postgres.Config{
+			Name:     "test-discover-pg",
+			Type:     postgres.SourceType,
+			Host:     PostgresHost,
+			Port:     PostgresPort,
+			Database: PostgresDatabase,
+			User:     PostgresUser,
+			Password: PostgresPass,
+			AutoDiscover: postgres.AutoDiscoverConfig{
+				Enabled:       true,
+				IncludeTables: []string{tableNameParam},
+			},
+		}
+
+		pgSource, err := postgresCfg.Initialize(ctx, nil)
+		if err != nil {
+			t.Fatalf("failed to initialize introspectable source: %v", err)
+		}
+		defer pgSource.(*postgres.Source).Pool.Close()
+
+		introspectable := pgSource.(sources.IntrospectableSource)
+		if !introspectable.IsAutoDiscoverEnabled() {
+			t.Errorf("expected auto discover to be enabled")
+		}
+
+		tables, err := introspectable.DiscoverTables(ctx)
+		if err != nil {
+			t.Fatalf("failed to discover tables: %v", err)
+		}
+
+		if len(tables) != 1 {
+			t.Errorf("expected 1 table discovered, got %d", len(tables))
+		} else {
+			tbl := tables[0]
+			if !strings.EqualFold(tbl.TableName, tableNameParam) {
+				t.Errorf("expected table name %q, got %q", tableNameParam, tbl.TableName)
+			}
+			if len(tbl.Columns) == 0 {
+				t.Errorf("expected columns for table %q", tbl.TableName)
+			}
+		}
+	})
 }

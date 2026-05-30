@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -46,10 +47,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	return actual, nil
 }
 
+type AutoDiscoverConfig struct {
+	Enabled       bool     `yaml:"enabled"`
+	IncludeTables []string `yaml:"includeTables"`
+	ExcludeTables []string `yaml:"excludeTables"`
+}
+
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Database string `yaml:"database" validate:"required"` // Path to SQLite database file
+	Name         string             `yaml:"name" validate:"required"`
+	Type         string             `yaml:"type" validate:"required"`
+	Database     string             `yaml:"database" validate:"required"` // Path to SQLite database file
+	AutoDiscover AutoDiscoverConfig `yaml:"autoDiscover"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -75,6 +83,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 }
 
 var _ sources.Source = &Source{}
+var _ sources.IntrospectableSource = &Source{}
 
 type Source struct {
 	Config
@@ -83,6 +92,114 @@ type Source struct {
 
 func (s *Source) SourceType() string {
 	return SourceType
+}
+
+// IsAutoDiscoverEnabled returns true if auto-discovery is enabled.
+func (s *Source) IsAutoDiscoverEnabled() bool {
+	return s.AutoDiscover.Enabled
+}
+
+// DiscoverTables introspects SQLite schema using sqlite_master and PRAGMA table_info.
+func (s *Source) DiscoverTables(ctx context.Context) ([]sources.TableSchema, error) {
+	rows, err := s.Db.QueryContext(ctx, "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var allTables []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		if s.shouldIncludeTable(name) {
+			allTables = append(allTables, name)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	var schemas []sources.TableSchema
+	for _, tableName := range allTables {
+		cols, err := func() ([]sources.ColumnSchema, error) {
+			escapedTableName := fmt.Sprintf("\"%s\"", strings.ReplaceAll(tableName, "\"", "\"\""))
+			colRows, err := s.Db.QueryContext(ctx, fmt.Sprintf("PRAGMA table_info(%s)", escapedTableName))
+			if err != nil {
+				return nil, err
+			}
+			defer colRows.Close()
+
+			var cols []sources.ColumnSchema
+			for colRows.Next() {
+				var cid int
+				var columnName, dataType string
+				var notNull int
+				var dfltValue *string
+				var pk int
+
+				if err := colRows.Scan(&cid, &columnName, &dataType, &notNull, &dfltValue, &pk); err != nil {
+					return nil, err
+				}
+
+				defaultStr := ""
+				if dfltValue != nil {
+					defaultStr = *dfltValue
+				}
+
+				cols = append(cols, sources.ColumnSchema{
+					ColumnName:    columnName,
+					DataType:      dataType,
+					IsNullable:    notNull == 0,
+					IsPrimaryKey:  pk > 0,
+					ColumnDefault: defaultStr,
+				})
+			}
+			if err := colRows.Err(); err != nil {
+				return nil, err
+			}
+			return cols, nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+
+		schemas = append(schemas, sources.TableSchema{
+			TableName: tableName,
+			Columns:   cols,
+		})
+	}
+
+	return schemas, nil
+}
+
+func (s *Source) shouldIncludeTable(tableName string) bool {
+	include := s.AutoDiscover.IncludeTables
+	exclude := s.AutoDiscover.ExcludeTables
+
+	if len(include) > 0 {
+		found := false
+		for _, inc := range include {
+			if strings.EqualFold(inc, tableName) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if len(exclude) > 0 {
+		for _, exc := range exclude {
+			if strings.EqualFold(exc, tableName) {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {

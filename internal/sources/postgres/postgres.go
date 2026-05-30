@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -49,16 +50,23 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	return actual, nil
 }
 
+type AutoDiscoverConfig struct {
+	Enabled       bool     `yaml:"enabled"`
+	IncludeTables []string `yaml:"includeTables"`
+	ExcludeTables []string `yaml:"excludeTables"`
+}
+
 type Config struct {
-	Name          string            `yaml:"name" validate:"required"`
-	Type          string            `yaml:"type" validate:"required"`
-	Host          string            `yaml:"host" validate:"required"`
-	Port          string            `yaml:"port" validate:"required"`
-	User          string            `yaml:"user" validate:"required"`
-	Password      string            `yaml:"password" validate:"required"`
-	Database      string            `yaml:"database" validate:"required"`
-	QueryParams   map[string]string `yaml:"queryParams"`
-	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
+	Name          string             `yaml:"name" validate:"required"`
+	Type          string             `yaml:"type" validate:"required"`
+	Host          string             `yaml:"host" validate:"required"`
+	Port          string             `yaml:"port" validate:"required"`
+	User          string             `yaml:"user" validate:"required"`
+	Password      string             `yaml:"password" validate:"required"`
+	Database      string             `yaml:"database" validate:"required"`
+	QueryParams   map[string]string  `yaml:"queryParams"`
+	QueryExecMode string             `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
+	AutoDiscover  AutoDiscoverConfig `yaml:"autoDiscover"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -84,6 +92,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 }
 
 var _ sources.Source = &Source{}
+var _ sources.IntrospectableSource = &Source{}
 
 type Source struct {
 	Config
@@ -92,6 +101,131 @@ type Source struct {
 
 func (s *Source) SourceType() string {
 	return SourceType
+}
+
+// IsAutoDiscoverEnabled returns true if auto-discovery is enabled for this source.
+func (s *Source) IsAutoDiscoverEnabled() bool {
+	return s.AutoDiscover.Enabled
+}
+
+// DiscoverTables queries information_schema to return tables and columns schema metadata.
+func (s *Source) DiscoverTables(ctx context.Context) ([]sources.TableSchema, error) {
+	// Query all base tables in public schema
+	tableQuery := `
+		SELECT table_name 
+		FROM information_schema.tables 
+		WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+	`
+	rows, err := s.Pool.Query(ctx, tableQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch tables: %w", err)
+	}
+	defer rows.Close()
+
+	var allTables []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			return nil, err
+		}
+		if s.shouldIncludeTable(tableName) {
+			allTables = append(allTables, tableName)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(allTables) == 0 {
+		return nil, nil
+	}
+
+	// Query column information and PK constraints for all found tables
+	columnQuery := `
+		SELECT 
+			c.table_name,
+			c.column_name, 
+			c.data_type, 
+			c.is_nullable = 'YES' AS is_nullable,
+			(pk.column_name IS NOT NULL) AS is_primary_key,
+			COALESCE(c.column_default, '') AS column_default
+		FROM information_schema.columns c
+		LEFT JOIN (
+			SELECT kcu.table_name, kcu.column_name
+			FROM information_schema.table_constraints tc
+			JOIN information_schema.key_column_usage kcu
+				ON tc.constraint_name = kcu.constraint_name
+				AND tc.table_schema = kcu.table_schema
+			WHERE tc.constraint_type = 'PRIMARY KEY'
+				AND tc.table_schema = 'public'
+		) pk ON c.table_name = pk.table_name AND c.column_name = pk.column_name
+		WHERE c.table_schema = 'public' AND c.table_name = ANY($1)
+		ORDER BY c.table_name, c.ordinal_position;
+	`
+	colRows, err := s.Pool.Query(ctx, columnQuery, allTables)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch columns: %w", err)
+	}
+	defer colRows.Close()
+
+	tableMap := make(map[string][]sources.ColumnSchema)
+	for colRows.Next() {
+		var tableName, columnName, dataType, columnDefault string
+		var isNullable, isPrimaryKey bool
+		if err := colRows.Scan(&tableName, &columnName, &dataType, &isNullable, &isPrimaryKey, &columnDefault); err != nil {
+			return nil, err
+		}
+		tableMap[tableName] = append(tableMap[tableName], sources.ColumnSchema{
+			ColumnName:    columnName,
+			DataType:      dataType,
+			IsNullable:    isNullable,
+			IsPrimaryKey:  isPrimaryKey,
+			ColumnDefault: columnDefault,
+		})
+	}
+	if err := colRows.Err(); err != nil {
+		return nil, err
+	}
+
+	var schemas []sources.TableSchema
+	for _, tableName := range allTables {
+		if cols, ok := tableMap[tableName]; ok {
+			schemas = append(schemas, sources.TableSchema{
+				TableName: tableName,
+				Columns:   cols,
+			})
+		}
+	}
+
+	return schemas, nil
+}
+
+func (s *Source) shouldIncludeTable(tableName string) bool {
+	include := s.AutoDiscover.IncludeTables
+	exclude := s.AutoDiscover.ExcludeTables
+
+	if len(include) > 0 {
+		found := false
+		for _, inc := range include {
+			if strings.EqualFold(inc, tableName) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	if len(exclude) > 0 {
+		for _, exc := range exclude {
+			if strings.EqualFold(exc, tableName) {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
